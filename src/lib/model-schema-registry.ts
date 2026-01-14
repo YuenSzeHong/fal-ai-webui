@@ -181,6 +181,24 @@ export const MODEL_SCHEMAS: Record<string, ModelSchema> = {
     fieldGroups: COMMON_FIELD_GROUPS
   },
 
+  // Example model using custom aspect ratio with dimension calculation
+  'fal-ai/flux/dev': {
+    modelId: 'fal-ai/flux/dev',
+    name: 'FLUX [dev] - Custom Dimensions',
+    description: 'FLUX development model with custom aspect ratio support',
+    category: 'text-to-image',
+    fields: [
+      COMMON_FIELDS.prompt,
+      COMMON_FIELDS.seed,
+      // Use custom aspect ratio instead of dropdown
+      COMMON_FIELDS.aspectRatioCustom,
+      COMMON_FIELDS.numImages,
+      COMMON_FIELDS.outputFormat,
+      COMMON_FIELDS.safetyChecker
+    ],
+    fieldGroups: COMMON_FIELD_GROUPS
+  },
+
   'fal-ai/f5-tts': {
     modelId: 'fal-ai/f5-tts',
     name: 'F5 TTS',
