@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
+import cache, { CACHE_DURATIONS } from '@/lib/cache';
+
+const CACHE_KEY = 'models:audio';
 
 // Audio generation models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -53,5 +56,13 @@ const AUDIO_MODELS = [
 ];
 
 export async function GET(request: Request) {
+  const cachedModels = cache.get<typeof AUDIO_MODELS>(CACHE_KEY);
+  if (cachedModels) {
+    console.log('[Cache HIT] audio models');
+    return createModelResponse('audio', cachedModels, request);
+  }
+  console.log('[Cache MISS] audio models');
+  cache.set(CACHE_KEY, AUDIO_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('audio', AUDIO_MODELS, request);
+}
 }

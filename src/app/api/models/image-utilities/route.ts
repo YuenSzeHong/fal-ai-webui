@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
+import cache, { CACHE_DURATIONS } from '@/lib/cache';
+
+const CACHE_KEY = 'models:image-utilities';
 
 // Image utility models available in fal.ai (depth, background removal, segmentation, etc.)
 // Based on https://docs.fal.ai/model-apis
@@ -82,5 +85,12 @@ const IMAGE_UTILITY_MODELS = [
 ];
 
 export async function GET(request: Request) {
+  const cachedModels = cache.get<typeof IMAGE_UTILITY_MODELS>(CACHE_KEY);
+  if (cachedModels) {
+    console.log('[Cache HIT] image-utilities models');
+    return createModelResponse('image-utilities', cachedModels, request);
+  }
+  console.log('[Cache MISS] image-utilities models');
+  cache.set(CACHE_KEY, IMAGE_UTILITY_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('image-utilities', IMAGE_UTILITY_MODELS, request);
 }

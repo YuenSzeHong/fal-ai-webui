@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
+import cache, { CACHE_DURATIONS } from '@/lib/cache';
+
+const CACHE_KEY = 'models:upscaling';
 
 // Upscaling models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -37,5 +40,13 @@ const UPSCALING_MODELS = [
 ];
 
 export async function GET(request: Request) {
+  const cachedModels = cache.get<typeof UPSCALING_MODELS>(CACHE_KEY);
+  if (cachedModels) {
+    console.log('[Cache HIT] upscaling models');
+    return createModelResponse('upscaling', cachedModels, request);
+  }
+  console.log('[Cache MISS] upscaling models');
+  cache.set(CACHE_KEY, UPSCALING_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('upscaling', UPSCALING_MODELS, request);
+}
 }

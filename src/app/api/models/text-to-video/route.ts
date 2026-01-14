@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
+import cache, { CACHE_DURATIONS } from '@/lib/cache';
+
+const CACHE_KEY = 'models:text-to-video';
 
 // Text-to-video models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -93,5 +96,16 @@ const TEXT_TO_VIDEO_MODELS = [
 ];
 
 export async function GET(request: Request) {
+  // Check cache first
+  const cachedModels = cache.get<typeof TEXT_TO_VIDEO_MODELS>(CACHE_KEY);
+  if (cachedModels) {
+    console.log('[Cache HIT] text-to-video models');
+    return createModelResponse('text-to-video', cachedModels, request);
+  }
+
+  // Cache miss - store in cache
+  console.log('[Cache MISS] text-to-video models - caching for', CACHE_DURATIONS.MODEL_LIST / 1000, 'seconds');
+  cache.set(CACHE_KEY, TEXT_TO_VIDEO_MODELS, CACHE_DURATIONS.MODEL_LIST);
+  
   return createModelResponse('text-to-video', TEXT_TO_VIDEO_MODELS, request);
 }

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
+import cache, { CACHE_DURATIONS } from '@/lib/cache';
+
+const CACHE_KEY = 'models:image-to-image';
 
 // Image-to-image models available in fal.ai (editing, inpainting, style transfer, etc.)
 // Based on https://docs.fal.ai/model-apis
@@ -237,5 +240,13 @@ const IMAGE_TO_IMAGE_MODELS = [
 ];
 
 export async function GET(request: Request) {
+  const cachedModels = cache.get<typeof IMAGE_TO_IMAGE_MODELS>(CACHE_KEY);
+  if (cachedModels) {
+    console.log('[Cache HIT] image-to-image models');
+    return createModelResponse('image-to-image', cachedModels, request);
+  }
+  console.log('[Cache MISS] image-to-image models');
+  cache.set(CACHE_KEY, IMAGE_TO_IMAGE_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('image-to-image', IMAGE_TO_IMAGE_MODELS, request);
+}
 }
