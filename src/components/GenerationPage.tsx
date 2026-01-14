@@ -78,6 +78,9 @@ const GenerationPage: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [formKey, setFormKey] = useState(0); // コンポーネントの強制再マウント用
   
+  // Model counts state
+  const [modelCounts, setModelCounts] = useState<Record<string, number>>({});
+  
   // フォームの状態を保持するためのステート
   const [imageFormState, setImageFormState] = useState<ImageFormState>({
     prompt: '',
@@ -105,6 +108,30 @@ const GenerationPage: React.FC = () => {
   // 画像拡大モーダルの状態
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState('');
+  
+  // Fetch model counts on mount
+  useEffect(() => {
+    const fetchModelCounts = async () => {
+      const categories = ['text-to-image', 'text-to-video', 'image-to-video', 'image-to-image', 'video-to-video', 'upscaling', 'image-to-3d', 'audio', 'image-utilities'];
+      const counts: Record<string, number> = {};
+      
+      await Promise.all(categories.map(async (category) => {
+        try {
+          const response = await fetch(`/api/models/${category}`);
+          if (response.ok) {
+            const data = await response.json();
+            counts[category] = data.models?.length || 0;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch model count for ${category}:`, error);
+        }
+      }));
+      
+      setModelCounts(counts);
+    };
+    
+    fetchModelCounts();
+  }, []);
   
   // Reset the selected image index when the image result changes
   useEffect(() => {
@@ -620,9 +647,24 @@ const GenerationPage: React.FC = () => {
                       {t('categories.comingSoon')}!
                     </p>
                     <p className="text-sm text-gray-400 dark:text-gray-500">
-                      {generationType === 'image-to-3d' && t('categories.i23dDesc')}
-                      {generationType === 'audio' && t('categories.audioDesc')}
-                      {generationType === 'image-utilities' && t('categories.utilsDesc')}
+                      {generationType === 'image-to-3d' && (
+                        <>
+                          {t('categories.i23dDesc')}
+                          {modelCounts['image-to-3d'] > 0 && ` (${t('categories.modelsAvailable', { count: modelCounts['image-to-3d'] })})`}
+                        </>
+                      )}
+                      {generationType === 'audio' && (
+                        <>
+                          {t('categories.audioDesc')}
+                          {modelCounts['audio'] > 0 && ` (${t('categories.modelsAvailable', { count: modelCounts['audio'] })})`}
+                        </>
+                      )}
+                      {generationType === 'image-utilities' && (
+                        <>
+                          {t('categories.utilsDesc')}
+                          {modelCounts['image-utilities'] > 0 && ` (${t('categories.modelsAvailable', { count: modelCounts['image-utilities'] })})`}
+                        </>
+                      )}
                     </p>
                   </div>
                 )}

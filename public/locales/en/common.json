@@ -109,14 +109,15 @@
     "audio": "Audio",
     "utils": "Utils",
     "comingSoon": "Coming Soon",
-    "t2iDesc": "Generate images from text descriptions (19 models available)",
-    "t2vDesc": "Generate videos from text descriptions (18 models available)",
-    "i2vDesc": "Generate videos from images (13 models available)",
-    "i2iDesc": "Transform and edit images (49 models available)",
-    "v2vDesc": "Transform videos (3 models available)",
-    "upscaleDesc": "Upscale images and videos (6 models available)",
-    "i23dDesc": "Generate 3D models from images (2 models available)",
-    "audioDesc": "Generate audio and music (9 models available)",
-    "utilsDesc": "Image utilities: background removal, depth, segmentation (15 models available)"
+    "t2iDesc": "Generate images from text descriptions",
+    "t2vDesc": "Generate videos from text descriptions",
+    "i2vDesc": "Generate videos from images",
+    "i2iDesc": "Transform and edit images",
+    "v2vDesc": "Transform videos",
+    "upscaleDesc": "Upscale images and videos",
+    "i23dDesc": "Generate 3D models from images",
+    "audioDesc": "Generate audio and music",
+    "utilsDesc": "Image utilities: background removal, depth, segmentation",
+    "modelsAvailable": "{{count}} models available"
   }
 } 
