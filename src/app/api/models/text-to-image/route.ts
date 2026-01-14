@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
 import cache, { CACHE_DURATIONS } from '@/lib/cache';
+import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
 const CACHE_KEY = 'models:text-to-image';
+const USE_DYNAMIC_FETCH = process.env.NEXT_PUBLIC_USE_DYNAMIC_MODELS === 'true';
 
-// Text-to-image models available in fal.ai
+// Fallback text-to-image models (used if dynamic fetch fails or is disabled)
 // Based on https://docs.fal.ai/model-apis
 const TEXT_TO_IMAGE_MODELS = [
   {
@@ -136,6 +138,28 @@ const TEXT_TO_IMAGE_MODELS = [
   }
 ];
 
+async function getDynamicModels() {
+  if (!USE_DYNAMIC_FETCH) {
+    return null; // Use fallback
+  }
+  
+  try {
+    console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
+    const allModels = await fetchFalModels();
+    const filtered = filterModelsByCategory(allModels, 'text-to-image');
+    const models = filtered.map(convertToModelInfo);
+    
+    if (models.length > 0) {
+      console.log(`[Dynamic Fetch] Successfully fetched ${models.length} text-to-image models`);
+      return models;
+    }
+    return null;
+  } catch (error) {
+    console.error('[Dynamic Fetch] Failed:', error);
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   // Check cache first
   const cachedModels = cache.get<typeof TEXT_TO_IMAGE_MODELS>(CACHE_KEY);
@@ -144,9 +168,19 @@ export async function GET(request: Request) {
     return createModelResponse('text-to-image', cachedModels, request);
   }
 
-  // Cache miss - store in cache
-  console.log('[Cache MISS] text-to-image models - caching for', CACHE_DURATIONS.MODEL_LIST / 1000, 'seconds');
-  cache.set(CACHE_KEY, TEXT_TO_IMAGE_MODELS, CACHE_DURATIONS.MODEL_LIST);
+  console.log('[Cache MISS] text-to-image models');
   
+  // Try dynamic fetch if enabled
+  const dynamicModels = await getDynamicModels();
+  
+  if (dynamicModels && dynamicModels.length > 0) {
+    console.log(`[Dynamic Models] Using ${dynamicModels.length} models from fal.ai API`);
+    cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
+    return createModelResponse('text-to-image', dynamicModels, request);
+  }
+  
+  // Fallback to hardcoded models
+  console.log('[Fallback] Using hardcoded model list');
+  cache.set(CACHE_KEY, TEXT_TO_IMAGE_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('text-to-image', TEXT_TO_IMAGE_MODELS, request);
 }
