@@ -5,17 +5,20 @@ fal.config({
   proxyUrl: '/api/fal/proxy',
 });
 
-// Available model endpoints
-export const MODELS = {
-  textToImage: {
-    FLUX1_1_PRO_ultra: 'fal-ai/flux-pro/v1.1-ultra',
-    FLUX1_1_PRO: 'fal-ai/flux-pro/v1.1',
+// Model information interface
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+}
 
-  },
-  textToVideo: {
-    WAN_T2V: 'fal-ai/wan-t2v',
-    WAN_T2V_1_3B: 'fal-ai/wan/v2.1/1.3b/text-to-video',
-  },
+// Default models (fallback if API fetch fails)
+export const DEFAULT_MODELS = {
+  textToImage: 'fal-ai/flux-pro/v1.1-ultra',
+  textToVideo: 'fal-ai/minimax/video-01',
+  imageToVideo: 'fal-ai/minimax/video-01/image-to-video',
+  upscaling: 'fal-ai/clarity-upscaler',
+  imageTo3D: 'fal-ai/era-3d',
 };
 
 // Types for image format and aspect ratio options
@@ -48,6 +51,26 @@ export interface VideoGenerationResult {
   };
   seed?: number;
   prompt?: string;
+}
+
+export interface UpscalingResult {
+  image: {
+    url: string;
+    width: number;
+    height: number;
+    content_type?: string;
+  };
+}
+
+export interface Image3DResult {
+  model: {
+    url: string;
+    content_type?: string;
+    file_name?: string;
+  };
+  preview?: {
+    url: string;
+  };
 }
 
 // Interface for fal.ai API response
