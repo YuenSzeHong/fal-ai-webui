@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Image utility models available in fal.ai (depth, background removal, segmentation, etc.)
 // Based on https://docs.fal.ai/model-apis
@@ -81,5 +82,5 @@ const IMAGE_UTILITY_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: IMAGE_UTILITY_MODELS });
+  return createModelResponse('image-utilities', IMAGE_UTILITY_MODELS);
 }

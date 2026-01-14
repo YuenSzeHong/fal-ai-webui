@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  MODELS, 
+  DEFAULT_MODELS,
+  ModelInfo,
+  fetchModels,
   ImageGenerationResult, 
   OutputFormat, 
   ImageAspectRatio, 
@@ -46,7 +48,7 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const { t } = useTranslations();
   const [prompt, setPrompt] = useState(initialState?.prompt || '');
   const [seed, setSeed] = useState<number | undefined>(initialState?.seed);
-  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || MODELS.textToImage.FLUX1_1_PRO_ultra);
+  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || DEFAULT_MODELS.textToImage);
   const [numImages, setNumImages] = useState(initialState?.numImages || 1);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>(initialState?.outputFormat || 'jpeg');
   const [aspectRatio, setAspectRatio] = useState<ImageAspectRatio>(initialState?.aspectRatio || '3:4');
@@ -57,6 +59,36 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImageGenerationResult | null>(null);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
+  
+  // Model loading state
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setModelsLoading(true);
+        const fetchedModels = await fetchModels('text-to-image');
+        setModels(fetchedModels);
+        setModelsError(null);
+      } catch (err) {
+        console.error('Failed to load models:', err);
+        setModelsError('Failed to load models');
+        // Use a fallback model list
+        setModels([{ 
+          id: DEFAULT_MODELS.textToImage, 
+          name: 'FLUX1.1 [pro] ultra', 
+          description: 'Default model' 
+        }]);
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+    
+    loadModels();
+  }, []);
 
   // 状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
@@ -99,9 +131,7 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   // モデルによって利用可能なサイズが異なるため、モデルが変更されたときにサイズを更新
   useEffect(() => {
     // 現在はモデル固有の条件分岐は不要ですが、将来的に必要になった場合のためのプレースホルダー
-    if (selectedModel === MODELS.textToImage.FLUX1_1_PRO_ultra) {
-      // モデル固有の設定があれば、ここで行います
-    }
+    // モデル固有の設定があれば、ここで行います
   }, [selectedModel]);
   
   // Send result to parent component when it changes
@@ -220,10 +250,25 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
           className="input bg-white dark:bg-gray-700 dark:text-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
+          disabled={modelsLoading}
         >
-          <option value={MODELS.textToImage.FLUX1_1_PRO_ultra}>FLUX1.1 [pro] ultra</option>
-          <option value={MODELS.textToImage.FLUX1_1_PRO}>FLUX1.1 [pro]</option>
+          {modelsLoading ? (
+            <option>Loading models...</option>
+          ) : modelsError ? (
+            <option>Error loading models</option>
+          ) : (
+            models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))
+          )}
         </select>
+        {modelsError && (
+          <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+            Using default model. Failed to load model list.
+          </p>
+        )}
       </div>
       
       <div className="mb-4">

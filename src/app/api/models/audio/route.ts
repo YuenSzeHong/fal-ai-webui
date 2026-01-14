@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Audio generation models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
 const AUDIO_MODELS = [
-  {
-    id: 'fal-ai/stable-audio',
-    name: 'Stable Audio',
-    description: 'Text-to-audio generation with Stable Audio'
-  },
+
   {
     id: 'fal-ai/minimax-music',
     name: 'MiniMax Music',
@@ -56,5 +53,5 @@ const AUDIO_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: AUDIO_MODELS });
+  return createModelResponse('audio', AUDIO_MODELS);
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Upscaling models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -36,5 +37,5 @@ const UPSCALING_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: UPSCALING_MODELS });
+  return createModelResponse('upscaling', UPSCALING_MODELS);
 }

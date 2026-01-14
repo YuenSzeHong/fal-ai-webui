@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Text-to-video models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -44,6 +45,11 @@ const TEXT_TO_VIDEO_MODELS = [
     description: 'Hunyuan text-to-video generation'
   },
   {
+    id: 'fal-ai/hunyuan-video-lora',
+    name: 'Hunyuan Video LoRA',
+    description: 'Hunyuan video with LoRA fine-tuning'
+  },
+  {
     id: 'fal-ai/mochi-v1',
     name: 'Mochi V1',
     description: 'Mochi text-to-video model'
@@ -73,11 +79,7 @@ const TEXT_TO_VIDEO_MODELS = [
     name: 'Luma Dream Machine',
     description: 'Luma Dream Machine text-to-video'
   },
-  {
-    id: 'fal-ai/fast-svd/text-to-video',
-    name: 'Fast SVD',
-    description: 'Fast Stable Video Diffusion for text-to-video'
-  },
+
   {
     id: 'fal-ai/fast-animatediff/text-to-video',
     name: 'Fast AnimateDiff',
@@ -91,5 +93,5 @@ const TEXT_TO_VIDEO_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: TEXT_TO_VIDEO_MODELS });
+  return createModelResponse('text-to-video', TEXT_TO_VIDEO_MODELS);
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Video-to-video models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -21,5 +22,5 @@ const VIDEO_TO_VIDEO_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: VIDEO_TO_VIDEO_MODELS });
+  return createModelResponse('video-to-video', VIDEO_TO_VIDEO_MODELS);
 }

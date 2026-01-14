@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createModelResponse } from '../model-response-helper';
 
 // Text-to-image models available in fal.ai
 // Based on https://docs.fal.ai/model-apis
@@ -29,6 +30,21 @@ const TEXT_TO_IMAGE_MODELS = [
     description: 'FLUX with LoRA fine-tuning support'
   },
   {
+    id: 'fal-ai/lora',
+    name: 'LoRA',
+    description: 'General LoRA model with custom styles'
+  },
+  {
+    id: 'fal-ai/flux-subject',
+    name: 'FLUX Subject',
+    description: 'FLUX with subject consistency'
+  },
+  {
+    id: 'fal-ai/flux-general',
+    name: 'FLUX General',
+    description: 'General purpose FLUX model'
+  },
+  {
     id: 'fal-ai/aura-flow',
     name: 'Aura Flow',
     description: 'Aura Flow text-to-image model'
@@ -43,21 +59,7 @@ const TEXT_TO_IMAGE_MODELS = [
     name: 'Recraft 20B',
     description: 'Recraft 20B parameter model'
   },
-  {
-    id: 'fal-ai/stable-diffusion-v35-large',
-    name: 'Stable Diffusion 3.5 Large',
-    description: 'Large variant of Stable Diffusion 3.5'
-  },
-  {
-    id: 'fal-ai/stable-diffusion-v35-medium',
-    name: 'Stable Diffusion 3.5 Medium',
-    description: 'Medium variant of Stable Diffusion 3.5'
-  },
-  {
-    id: 'fal-ai/stable-diffusion-v3-medium',
-    name: 'Stable Diffusion 3 Medium',
-    description: 'Stable Diffusion 3 medium model'
-  },
+
   {
     id: 'fal-ai/ideogram/v2',
     name: 'Ideogram V2',
@@ -78,16 +80,7 @@ const TEXT_TO_IMAGE_MODELS = [
     name: 'Sana',
     description: 'Sana text-to-image model'
   },
-  {
-    id: 'fal-ai/fast-sdxl',
-    name: 'Fast SDXL',
-    description: 'Fast Stable Diffusion XL'
-  },
-  {
-    id: 'fal-ai/stable-cascade',
-    name: 'Stable Cascade',
-    description: 'Stable Cascade generation model'
-  },
+
   {
     id: 'fal-ai/kolors',
     name: 'Kolors',
@@ -111,5 +104,5 @@ const TEXT_TO_IMAGE_MODELS = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ models: TEXT_TO_IMAGE_MODELS });
+  return createModelResponse('text-to-image', TEXT_TO_IMAGE_MODELS);
 }

@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  MODELS, 
+  DEFAULT_MODELS,
+  ModelInfo,
+  fetchModels,
   VideoGenerationResult,
   VideoResolution,
   VideoAspectRatio
@@ -43,7 +45,7 @@ const TextToVideoForm: React.FC<TextToVideoFormProps> = ({
   const { t } = useTranslations();
   const [prompt, setPrompt] = useState(initialState?.prompt || '');
   const [seed, setSeed] = useState<number | undefined>(initialState?.seed);
-  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || MODELS.textToVideo.WAN_T2V);
+  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || DEFAULT_MODELS.textToVideo);
   const [resolution, setResolution] = useState<VideoResolution>(initialState?.resolution || '720p');
   const [aspectRatio, setAspectRatio] = useState<VideoAspectRatio>(initialState?.aspectRatio || '16:9');
   const [inferenceSteps, setInferenceSteps] = useState(initialState?.inferenceSteps || 30);
@@ -53,6 +55,36 @@ const TextToVideoForm: React.FC<TextToVideoFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VideoGenerationResult | null>(null);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
+  
+  // Model loading state
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setModelsLoading(true);
+        const fetchedModels = await fetchModels('text-to-video');
+        setModels(fetchedModels);
+        setModelsError(null);
+      } catch (err) {
+        console.error('Failed to load models:', err);
+        setModelsError('Failed to load models');
+        // Use a fallback model list
+        setModels([{ 
+          id: DEFAULT_MODELS.textToVideo, 
+          name: 'MiniMax Video-01', 
+          description: 'Default model' 
+        }]);
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+    
+    loadModels();
+  }, []);
 
   // 状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
@@ -204,10 +236,25 @@ const TextToVideoForm: React.FC<TextToVideoFormProps> = ({
           className="input bg-white dark:bg-gray-700 dark:text-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
+          disabled={modelsLoading}
         >
-          <option value={MODELS.textToVideo.WAN_T2V}>Wan-2.1 Text-to-Video</option>
-          <option value={MODELS.textToVideo.WAN_T2V_1_3B}>Wan-2.1 Text-to-Video 1.3B</option>
+          {modelsLoading ? (
+            <option>Loading models...</option>
+          ) : modelsError ? (
+            <option>Error loading models</option>
+          ) : (
+            models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))
+          )}
         </select>
+        {modelsError && (
+          <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+            Using default model. Failed to load model list.
+          </p>
+        )}
       </div>
       
       <div className="mb-4">
