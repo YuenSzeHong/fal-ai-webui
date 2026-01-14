@@ -112,11 +112,11 @@ const GenerationPage: React.FC = () => {
     if (task.status === 'completed' && task.result) {
       if (task.type === 'image') {
         setImageResult(task.result);
-        setGenerationType('image');
+        setGenerationType('text-to-image');
         setSelectedImageIndex(0);
       } else if (task.type === 'video') {
         setVideoResult(task.result);
-        setGenerationType('video');
+        setGenerationType('text-to-video');
       }
     }
   };

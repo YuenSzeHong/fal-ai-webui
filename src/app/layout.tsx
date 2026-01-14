@@ -1,10 +1,10 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
 import { NotificationProvider } from '@/components/common/NotificationContext'
 import { TranslationsProvider } from '@/components/TranslationsProvider'
 import type { Metadata } from 'next'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system font stack as fallback for environments without internet access
+const fontClassName = 'font-sans'
 
 export const metadata: Metadata = {
   title: 'FAL.AI Web UI',
@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang={locale}>
-      <body className={inter.className}>
+      <body className={fontClassName}>
         <NotificationProvider>
           <TranslationsProvider locale={locale}>
             <main className="min-h-screen">
