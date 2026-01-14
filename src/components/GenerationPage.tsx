@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { 
-  MODELS, 
+  DEFAULT_MODELS,
   ImageGenerationResult, 
   VideoGenerationResult,
   OutputFormat,
@@ -69,7 +69,7 @@ const GenerationPage: React.FC = () => {
   const [imageFormState, setImageFormState] = useState<ImageFormState>({
     prompt: '',
     seed: undefined,
-    selectedModel: MODELS.textToImage.FLUX1_1_PRO_ultra,
+    selectedModel: DEFAULT_MODELS.textToImage,
     numImages: 1,
     outputFormat: 'jpeg',
     aspectRatio: '3:4',
@@ -81,7 +81,7 @@ const GenerationPage: React.FC = () => {
   const [videoFormState, setVideoFormState] = useState<VideoFormState>({
     prompt: '',
     seed: undefined,
-    selectedModel: MODELS.textToVideo.WAN_T2V,
+    selectedModel: DEFAULT_MODELS.textToVideo,
     resolution: '720p',
     aspectRatio: '16:9',
     inferenceSteps: 30,
