@@ -27,7 +27,16 @@ import UseForGenerationButton from './common/UseForGenerationButton';
 import { useTranslations } from '@/lib/useTranslations';
 import ImageZoomModal from './common/ImageZoomModal';
 
-type GenerationType = 'image' | 'video';
+type GenerationType = 
+  | 'text-to-image' 
+  | 'text-to-video' 
+  | 'image-to-video' 
+  | 'image-to-image' 
+  | 'video-to-video' 
+  | 'upscaling' 
+  | 'image-to-3d' 
+  | 'audio' 
+  | 'image-utilities';
 
 // 画像生成フォームの状態の型定義
 interface ImageFormState {
@@ -58,7 +67,7 @@ const GenerationPage: React.FC = () => {
   const { t } = useTranslations();
   
   // Common state
-  const [generationType, setGenerationType] = useState<GenerationType>('image');
+  const [generationType, setGenerationType] = useState<GenerationType>('text-to-image');
   const [activePanel, setActivePanel] = useState<'form' | 'history'>('form');
   const [imageResult, setImageResult] = useState<ImageGenerationResult | null>(null);
   const [videoResult, setVideoResult] = useState<VideoGenerationResult | null>(null);
@@ -116,18 +125,22 @@ const GenerationPage: React.FC = () => {
   const handleSelectHistoryItem = (item: ImageHistoryItem | VideoHistoryItem) => {
     if (item.type === 'image') {
       setImageResult(item.result);
-      setGenerationType('image');
+      setGenerationType('text-to-image');
       setSelectedImageIndex(0);
     } else if (item.type === 'video') {
       setVideoResult(item.result);
-      setGenerationType('video');
+      setGenerationType('text-to-video');
     }
     setActivePanel('form');
   };
 
   // 結果表示コンポーネント
   const ResultDisplay = () => {
-    if (generationType === 'image') {
+    // Show image results for image-related generation types
+    const imageTypes: GenerationType[] = ['text-to-image', 'image-to-image', 'upscaling', 'image-utilities'];
+    const videoTypes: GenerationType[] = ['text-to-video', 'image-to-video', 'video-to-video'];
+    
+    if (imageTypes.includes(generationType)) {
       if (imageResult && imageResult.images && imageResult.images.length > 0) {
         return (
           <div>
@@ -281,8 +294,11 @@ const GenerationPage: React.FC = () => {
 
   // プロンプトを生成フォームに適用する関数
   const usePromptForGeneration = (prompt: string) => {
-    // TextToImageFormまたはTextToVideoFormコンポーネントにプロンプトを渡すための状態
-    if (generationType === 'image') {
+    // Image-related types
+    const imageTypes: GenerationType[] = ['text-to-image', 'image-to-image', 'upscaling', 'image-utilities'];
+    const videoTypes: GenerationType[] = ['text-to-video', 'image-to-video', 'video-to-video'];
+    
+    if (imageTypes.includes(generationType)) {
       // 現在の状態を保存
       localStorage.setItem('savedImagePrompt', prompt);
       // イメージフォームの状態を更新
@@ -290,7 +306,7 @@ const GenerationPage: React.FC = () => {
         ...prev,
         prompt
       }));
-    } else {
+    } else if (videoTypes.includes(generationType)) {
       localStorage.setItem('savedVideoPrompt', prompt);
       // ビデオフォームの状態を更新
       setVideoFormState(prev => ({
@@ -350,41 +366,185 @@ const GenerationPage: React.FC = () => {
           
           {/* サブナビゲーション - 生成タイプの選択 (フォームパネルのみ表示) */}
           {activePanel === 'form' && (
-            <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
-              <div className="flex">
+            <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
+              <div className="flex min-w-max">
+                {/* Text to Image */}
                 <button
-                  className={`relative py-3 px-6 font-medium text-sm focus:outline-none ${
-                    generationType === 'image'
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'text-to-image'
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
-                  onClick={() => setGenerationType('image')}
+                  onClick={() => setGenerationType('text-to-image')}
                 >
                   <span className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {t('generationType.image')}
+                    T2I
                   </span>
-                  {generationType === 'image' && (
+                  {generationType === 'text-to-image' && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
                   )}
                 </button>
+                
+                {/* Text to Video */}
                 <button
-                  className={`relative py-3 px-6 font-medium text-sm focus:outline-none ${
-                    generationType === 'video'
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'text-to-video'
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
-                  onClick={() => setGenerationType('video')}
+                  onClick={() => setGenerationType('text-to-video')}
                 >
                   <span className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    {t('generationType.video')}
+                    T2V
                   </span>
-                  {generationType === 'video' && (
+                  {generationType === 'text-to-video' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Image to Video */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'image-to-video'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('image-to-video')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                    I2V
+                  </span>
+                  {generationType === 'image-to-video' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Image to Image */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'image-to-image'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('image-to-image')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    I2I
+                  </span>
+                  {generationType === 'image-to-image' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Video to Video */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'video-to-video'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('video-to-video')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                    </svg>
+                    V2V
+                  </span>
+                  {generationType === 'video-to-video' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Upscaling */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'upscaling'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('upscaling')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                    Upscale
+                  </span>
+                  {generationType === 'upscaling' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Image to 3D */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'image-to-3d'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('image-to-3d')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    I23D
+                  </span>
+                  {generationType === 'image-to-3d' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Audio */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'audio'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('audio')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    Audio
+                  </span>
+                  {generationType === 'audio' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </button>
+                
+                {/* Image Utilities */}
+                <button
+                  className={`relative py-3 px-4 font-medium text-xs sm:text-sm focus:outline-none whitespace-nowrap ${
+                    generationType === 'image-utilities'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  onClick={() => setGenerationType('image-utilities')}
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Utils
+                  </span>
+                  {generationType === 'image-utilities' && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
                   )}
                 </button>
@@ -399,20 +559,41 @@ const GenerationPage: React.FC = () => {
             {/* 左側カラム: フォーム部分 */}
             <div className="xl:col-span-4">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                {generationType === 'image' ? (
+                {generationType === 'text-to-image' ? (
                   <TextToImageForm 
                     onResultChange={setImageResult}
                     key={formKey}
                     initialState={imageFormState}
                     onStateChange={setImageFormState}
                   />
-                ) : (
+                ) : generationType === 'text-to-video' ? (
                   <TextToVideoForm 
                     onResultChange={setVideoResult}
                     key={formKey}
                     initialState={videoFormState}
                     onStateChange={setVideoFormState}
                   />
+                ) : (
+                  <div className="text-center py-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      {generationType.charAt(0).toUpperCase() + generationType.slice(1).replace(/-/g, ' ')}
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                      This generation type is coming soon!
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      {generationType === 'image-to-video' && 'Transform your images into videos'}
+                      {generationType === 'image-to-image' && '49 models available for image editing, inpainting, and style transfer'}
+                      {generationType === 'video-to-video' && 'Transform and edit video content'}
+                      {generationType === 'upscaling' && '6 models available for image and video upscaling'}
+                      {generationType === 'image-to-3d' && 'Generate 3D models from images'}
+                      {generationType === 'audio' && '9 models for TTS, music generation, and audio effects'}
+                      {generationType === 'image-utilities' && '15 models for background removal, depth estimation, and more'}
+                    </p>
+                  </div>
                 )}
               </div>
               
@@ -426,7 +607,11 @@ const GenerationPage: React.FC = () => {
             <div className="xl:col-span-5">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">
-                  {generationType === 'image' ? t('generation.result.imageTitle') : t('generation.result.videoTitle')}
+                  {generationType.includes('image') || generationType === 'upscaling' || generationType === 'image-utilities' 
+                    ? t('generation.result.imageTitle') 
+                    : generationType.includes('video') 
+                    ? t('generation.result.videoTitle')
+                    : 'Result'}
                 </h2>
                 <ResultDisplay />
               </div>
