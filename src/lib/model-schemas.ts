@@ -7,7 +7,8 @@ export type FieldType =
   | 'checkbox' 
   | 'slider' 
   | 'image-upload'
-  | 'file-upload';
+  | 'file-upload'
+  | 'aspect-ratio'; // New type for aspect ratio with dimension calculation
 
 export interface FieldOption {
   value: string | number;
@@ -30,6 +31,10 @@ export interface FieldSchema {
   accept?: string; // For file uploads
   rows?: number; // For textarea
   group?: string; // For grouping fields
+  // For aspect-ratio type
+  targetSize?: number; // Target size for dimension calculation (default 1024)
+  tileSize?: number; // Tile size for rounding (default 8)
+  showDimensions?: boolean; // Show calculated dimensions (default true)
 }
 
 export interface ModelSchema {
@@ -96,6 +101,18 @@ export const COMMON_FIELDS = {
       { value: '9:16', label: '9:16 - Mobile' },
       { value: '9:21', label: '9:21 - Ultra Tall' }
     ],
+    group: 'basic'
+  },
+  aspectRatioCustom: {
+    name: 'aspect_ratio',
+    label: 'Aspect Ratio',
+    type: 'aspect-ratio' as FieldType,
+    description: 'Custom aspect ratio (e.g., "16:9") - dimensions will be calculated automatically',
+    defaultValue: '16:9',
+    placeholder: 'e.g., 16:9',
+    targetSize: 1024,
+    tileSize: 8,
+    showDimensions: true,
     group: 'basic'
   },
   outputFormat: {

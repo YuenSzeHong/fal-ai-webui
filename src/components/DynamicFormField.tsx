@@ -1,8 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FieldSchema, FieldType } from '@/lib/model-schemas';
 import { useTranslations } from '@/lib/useTranslations';
+import { 
+  calculateBestDimensions, 
+  validateAspectRatio, 
+  ASPECT_RATIO_PRESETS 
+} from '@/lib/aspect-ratio-utils';
 
 interface DynamicFormFieldProps {
   field: FieldSchema;
@@ -13,6 +18,8 @@ interface DynamicFormFieldProps {
 const DynamicFormField: React.FC<DynamicFormFieldProps> = ({ field, value, onChange }) => {
   const { t } = useTranslations();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [aspectRatioError, setAspectRatioError] = useState<string | null>(null);
+  const [calculatedDimensions, setCalculatedDimensions] = useState<{ width: number; height: number } | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,8 +37,77 @@ const DynamicFormField: React.FC<DynamicFormFieldProps> = ({ field, value, onCha
     onChange(field.name, reader.result);
   };
 
+  // Calculate dimensions when aspect ratio changes
+  useEffect(() => {
+    if (field.type === 'aspect-ratio' && value) {
+      if (validateAspectRatio(value)) {
+        try {
+          const dimensions = calculateBestDimensions(
+            value,
+            field.targetSize || 1024,
+            field.tileSize || 8
+          );
+          setCalculatedDimensions(dimensions);
+          setAspectRatioError(null);
+        } catch (error) {
+          setAspectRatioError('Invalid aspect ratio');
+          setCalculatedDimensions(null);
+        }
+      } else {
+        setAspectRatioError('Use format like "16:9"');
+        setCalculatedDimensions(null);
+      }
+    }
+  }, [value, field.type, field.targetSize, field.tileSize]);
+
   const renderField = () => {
     switch (field.type) {
+      case 'aspect-ratio':
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                id={field.name}
+                className={`input bg-white dark:bg-gray-700 dark:text-white flex-1 ${
+                  aspectRatioError ? 'border-red-500' : ''
+                }`}
+                value={value || ''}
+                onChange={(e) => onChange(field.name, e.target.value)}
+                placeholder={field.placeholder || 'e.g., 16:9'}
+                required={field.required}
+              />
+              {/* Preset dropdown */}
+              <select
+                className="input bg-white dark:bg-gray-700 dark:text-white w-48"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onChange(field.name, e.target.value);
+                  }
+                }}
+              >
+                <option value="">Presets...</option>
+                {ASPECT_RATIO_PRESETS.map((preset) => (
+                  <option key={preset.value} value={preset.value}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {aspectRatioError && (
+              <p className="text-sm text-red-500">{aspectRatioError}</p>
+            )}
+            {field.showDimensions !== false && calculatedDimensions && (
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Calculated dimensions: {calculatedDimensions.width} × {calculatedDimensions.height}px
+                </span>
+              </div>
+            )}
+          </div>
+        );
+
       case 'text':
         return (
           <input
