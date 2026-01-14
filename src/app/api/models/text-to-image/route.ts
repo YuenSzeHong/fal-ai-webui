@@ -4,7 +4,6 @@ import cache, { CACHE_DURATIONS } from '@/lib/cache';
 import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
 const CACHE_KEY = 'models:text-to-image';
-const USE_DYNAMIC_FETCH = process.env.NEXT_PUBLIC_USE_DYNAMIC_MODELS === 'true';
 
 // Fallback text-to-image models (used if dynamic fetch fails or is disabled)
 // Based on https://docs.fal.ai/model-apis
@@ -139,10 +138,6 @@ const TEXT_TO_IMAGE_MODELS = [
 ];
 
 async function getDynamicModels() {
-  if (!USE_DYNAMIC_FETCH) {
-    return null; // Use fallback
-  }
-  
   try {
     console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
     const allModels = await fetchFalModels();
