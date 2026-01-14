@@ -89,50 +89,20 @@ const ImageToImageForm: React.FC<ImageToImageFormProps> = ({ onResultChange }) =
         finalImageUrl = imagePreview || '';
       }
 
-      const task: Task = {
-        id: Date.now().toString(),
-        type: 'image' as const,
-        status: 'pending' as const,
-        createdAt: new Date(),
-        params: {
-          prompt,
-          model: selectedModel,
-          imageUrl: finalImageUrl,
-        },
-        execute: async () => {
-          const result = await generateImageToImage(
-            finalImageUrl,
-            prompt,
-            selectedModel,
-            {
-              seed,
-              strength,
-            }
-          );
-
-          if (result && result.images && result.images.length > 0) {
-            result.images.forEach((img) => {
-              addImageToHistory({
-                prompt,
-                model: selectedModel,
-                imageUrl: img.url,
-                width: img.width,
-                height: img.height,
-                seed: result.seed,
-                timestamp: new Date(),
-              });
-            });
-          }
-
-          if (onResultChange) {
-            onResultChange(result);
-          }
-
-          return result;
-        },
+      const options = {
+        image_url: finalImageUrl,
+        seed,
+        strength,
       };
 
-      taskQueue.addTask(task);
+      // Add task to queue
+      taskQueue.addTask('image', prompt, selectedModel, options);
+      
+      // Reset form
+      setImageFile(null);
+      setImagePreview(null);
+      setImageUrl('');
+      setPrompt('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {

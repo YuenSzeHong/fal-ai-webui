@@ -96,48 +96,22 @@ const ImageToVideoForm: React.FC<ImageToVideoFormProps> = ({ onResultChange }) =
         finalImageUrl = imagePreview || '';
       }
 
-      const task: Task = {
-        id: Date.now().toString(),
-        type: 'video' as const,
-        status: 'pending' as const,
-        createdAt: new Date(),
-        params: {
-          prompt,
-          model: selectedModel,
-          imageUrl: finalImageUrl,
-        },
-        execute: async () => {
-          const result = await generateImageToVideo(
-            finalImageUrl,
-            prompt,
-            selectedModel,
-            {
-              seed,
-              resolution,
-              aspect_ratio: aspectRatio,
-              duration,
-            }
-          );
-
-          if (result && result.video) {
-            addVideoToHistory({
-              prompt,
-              model: selectedModel,
-              videoUrl: result.video.url,
-              seed: result.seed,
-              timestamp: new Date(),
-            });
-          }
-
-          if (onResultChange) {
-            onResultChange(result);
-          }
-
-          return result;
-        },
+      const options = {
+        image_url: finalImageUrl,
+        seed,
+        resolution,
+        aspect_ratio: aspectRatio,
+        duration,
       };
 
-      taskQueue.addTask(task);
+      // Add task to queue
+      taskQueue.addTask('video', prompt, selectedModel, options);
+      
+      // Reset form
+      setImageFile(null);
+      setImagePreview(null);
+      setImageUrl('');
+      setPrompt('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {

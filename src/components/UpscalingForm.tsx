@@ -84,47 +84,20 @@ const UpscalingForm: React.FC<UpscalingFormProps> = ({ onResultChange }) => {
         finalImageUrl = imagePreview || '';
       }
 
-      const task: Task = {
-        id: Date.now().toString(),
-        type: 'image' as const,
-        status: 'pending' as const,
-        createdAt: new Date(),
-        params: {
-          prompt: `Upscale ${scale}x`,
-          model: selectedModel,
-          imageUrl: finalImageUrl,
-        },
-        execute: async () => {
-          const result = await upscaleImage(
-            finalImageUrl,
-            selectedModel,
-            {
-              scale,
-              creativity,
-              detail,
-            }
-          );
-
-          if (result && result.image) {
-            addImageToHistory({
-              prompt: `Upscaled ${scale}x`,
-              model: selectedModel,
-              imageUrl: result.image.url,
-              width: result.image.width,
-              height: result.image.height,
-              timestamp: new Date(),
-            });
-          }
-
-          if (onResultChange) {
-            onResultChange(result);
-          }
-
-          return result;
-        },
+      const options = {
+        image_url: finalImageUrl,
+        scale,
+        creativity,
+        detail,
       };
 
-      taskQueue.addTask(task);
+      // Add task to queue
+      taskQueue.addTask('image', `Upscale ${scale}x`, selectedModel, options);
+      
+      // Reset form
+      setImageFile(null);
+      setImagePreview(null);
+      setImageUrl('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {

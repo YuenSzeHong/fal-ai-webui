@@ -66,43 +66,17 @@ const VideoToVideoForm: React.FC<VideoToVideoFormProps> = ({ onResultChange }) =
     setIsGenerating(true);
 
     try {
-      const task: Task = {
-        id: Date.now().toString(),
-        type: 'video' as const,
-        status: 'pending' as const,
-        createdAt: new Date(),
-        params: {
-          prompt,
-          model: selectedModel,
-          videoUrl,
-        },
-        execute: async () => {
-          const result = await generateVideoToVideo(
-            videoUrl,
-            prompt,
-            selectedModel,
-            { seed }
-          );
-
-          if (result && result.video) {
-            addVideoToHistory({
-              prompt,
-              model: selectedModel,
-              videoUrl: result.video.url,
-              seed: result.seed,
-              timestamp: new Date(),
-            });
-          }
-
-          if (onResultChange) {
-            onResultChange(result);
-          }
-
-          return result;
-        },
+      const options = {
+        video_url: videoUrl,
+        seed,
       };
 
-      taskQueue.addTask(task);
+      // Add task to queue
+      taskQueue.addTask('video', prompt, selectedModel, options);
+      
+      // Reset form
+      setVideoUrl('');
+      setPrompt('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {
