@@ -65,4 +65,3 @@ export async function GET(request: Request) {
   cache.set(CACHE_KEY, AUDIO_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('audio', AUDIO_MODELS, request);
 }
-}

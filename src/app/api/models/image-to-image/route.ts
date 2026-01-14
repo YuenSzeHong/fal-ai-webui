@@ -249,4 +249,3 @@ export async function GET(request: Request) {
   cache.set(CACHE_KEY, IMAGE_TO_IMAGE_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('image-to-image', IMAGE_TO_IMAGE_MODELS, request);
 }
-}

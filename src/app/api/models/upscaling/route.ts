@@ -49,4 +49,3 @@ export async function GET(request: Request) {
   cache.set(CACHE_KEY, UPSCALING_MODELS, CACHE_DURATIONS.MODEL_LIST);
   return createModelResponse('upscaling', UPSCALING_MODELS, request);
 }
-}
