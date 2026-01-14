@@ -20,6 +20,10 @@ import {
 import Header from './Header';
 import TextToImageForm from './TextToImageForm';
 import TextToVideoForm from './TextToVideoForm';
+import ImageToVideoForm from './ImageToVideoForm';
+import ImageToImageForm from './ImageToImageForm';
+import VideoToVideoForm from './VideoToVideoForm';
+import UpscalingForm from './UpscalingForm';
 import HistoryPanel from './HistoryPanel';
 import TaskQueuePanel from './TaskQueuePanel';
 import CopyToClipboardButton from './common/CopyToClipboardButton';
@@ -573,6 +577,37 @@ const GenerationPage: React.FC = () => {
                     initialState={videoFormState}
                     onStateChange={setVideoFormState}
                   />
+                ) : generationType === 'image-to-video' ? (
+                  <ImageToVideoForm 
+                    onResultChange={setVideoResult}
+                    key={formKey}
+                  />
+                ) : generationType === 'image-to-image' ? (
+                  <ImageToImageForm 
+                    onResultChange={setImageResult}
+                    key={formKey}
+                  />
+                ) : generationType === 'video-to-video' ? (
+                  <VideoToVideoForm 
+                    onResultChange={setVideoResult}
+                    key={formKey}
+                  />
+                ) : generationType === 'upscaling' ? (
+                  <UpscalingForm 
+                    onResultChange={(result) => {
+                      if (result) {
+                        // Convert UpscalingResult to ImageGenerationResult format
+                        setImageResult({
+                          images: [result.image],
+                          prompt: 'Upscaled image',
+                          seed: undefined
+                        });
+                      } else {
+                        setImageResult(null);
+                      }
+                    }}
+                    key={formKey}
+                  />
                 ) : (
                   <div className="text-center py-12">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -585,11 +620,7 @@ const GenerationPage: React.FC = () => {
                       This generation type is coming soon!
                     </p>
                     <p className="text-sm text-gray-400 dark:text-gray-500">
-                      {generationType === 'image-to-video' && 'Transform your images into videos'}
-                      {generationType === 'image-to-image' && '49 models available for image editing, inpainting, and style transfer'}
-                      {generationType === 'video-to-video' && 'Transform and edit video content'}
-                      {generationType === 'upscaling' && '6 models available for image and video upscaling'}
-                      {generationType === 'image-to-3d' && 'Generate 3D models from images'}
+                      {generationType === 'image-to-3d' && 'Generate 3D models from images (2 models available)'}
                       {generationType === 'audio' && '9 models for TTS, music generation, and audio effects'}
                       {generationType === 'image-utilities' && '15 models for background removal, depth estimation, and more'}
                     </p>
