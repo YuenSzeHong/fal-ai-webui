@@ -67,6 +67,6 @@ const IMAGE_TO_VIDEO_MODELS = [
 
 ];
 
-export async function GET() {
-  return createModelResponse('image-to-video', IMAGE_TO_VIDEO_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('image-to-video', IMAGE_TO_VIDEO_MODELS, request);
 }

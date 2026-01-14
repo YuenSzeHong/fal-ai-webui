@@ -16,6 +16,6 @@ const IMAGE_TO_3D_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('image-to-3d', IMAGE_TO_3D_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('image-to-3d', IMAGE_TO_3D_MODELS, request);
 }

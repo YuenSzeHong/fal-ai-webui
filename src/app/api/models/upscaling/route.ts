@@ -36,6 +36,6 @@ const UPSCALING_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('upscaling', UPSCALING_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('upscaling', UPSCALING_MODELS, request);
 }

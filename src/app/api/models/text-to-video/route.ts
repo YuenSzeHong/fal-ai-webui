@@ -92,6 +92,6 @@ const TEXT_TO_VIDEO_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('text-to-video', TEXT_TO_VIDEO_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('text-to-video', TEXT_TO_VIDEO_MODELS, request);
 }

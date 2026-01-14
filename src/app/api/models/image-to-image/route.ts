@@ -236,6 +236,6 @@ const IMAGE_TO_IMAGE_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('image-to-image', IMAGE_TO_IMAGE_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('image-to-image', IMAGE_TO_IMAGE_MODELS, request);
 }

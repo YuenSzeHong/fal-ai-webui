@@ -52,6 +52,6 @@ const AUDIO_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('audio', AUDIO_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('audio', AUDIO_MODELS, request);
 }

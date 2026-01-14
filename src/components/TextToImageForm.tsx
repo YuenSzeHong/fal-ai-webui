@@ -64,6 +64,10 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsError, setModelsError] = useState<string | null>(null);
+  
+  // Get current model info
+  const currentModel = models.find(m => m.id === selectedModel);
+  const safetyFilterDisabled = currentModel && currentModel.supportsSafetyFilter === false;
 
   // Fetch available models on mount
   useEffect(() => {
@@ -269,6 +273,11 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
             Using default model. Failed to load model list.
           </p>
         )}
+        {currentModel?.safetyFilterNote && (
+          <p className="mt-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded border border-blue-200 dark:border-blue-800">
+            ℹ️ {currentModel.safetyFilterNote}
+          </p>
+        )}
       </div>
       
       <div className="mb-4">
@@ -368,9 +377,11 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             checked={enableSafetyChecker}
             onChange={(e) => setEnableSafetyChecker(e.target.checked)}
+            disabled={safetyFilterDisabled}
           />
-          <label htmlFor="enableSafetyChecker" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor="enableSafetyChecker" className={`ml-2 block text-sm ${safetyFilterDisabled ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>
             {t('form.safetyChecker')}
+            {safetyFilterDisabled && ' (Not available for this model)'}
           </label>
         </div>
         

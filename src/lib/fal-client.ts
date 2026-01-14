@@ -10,6 +10,8 @@ export interface ModelInfo {
   id: string;
   name: string;
   description: string;
+  supportsSafetyFilter?: boolean; // Indicates if model supports disabling safety filter
+  safetyFilterNote?: string; // Additional note about safety filter behavior
 }
 
 // Default models (fallback if API fetch fails)
@@ -71,6 +73,16 @@ export interface Image3DResult {
   preview?: {
     url: string;
   };
+}
+
+export interface AudioResult {
+  audio: {
+    url: string;
+    content_type?: string;
+    file_name?: string;
+    file_size?: number;
+  };
+  duration?: number;
 }
 
 // Interface for fal.ai API response
@@ -281,6 +293,118 @@ export async function generateImage3D(
     return result;
   } catch (error) {
     console.error('Error generating 3D model:', error);
+    throw error;
+  }
+}
+
+// Function to generate image from image (edit, transform, etc.)
+export async function generateImageToImage(
+  imageUrl: string,
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<ImageGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<ImageGenerationResult>).data;
+    
+    if (!result || !result.images || result.images.length === 0) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating image from image:', error);
+    throw error;
+  }
+}
+
+// Function to transform video
+export async function generateVideoToVideo(
+  videoUrl: string,
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<VideoGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        video_url: videoUrl,
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<VideoGenerationResult>).data;
+    
+    if (!result || !result.video || !result.video.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error transforming video:', error);
+    throw error;
+  }
+}
+
+// Function to generate audio
+export async function generateAudio(
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<AudioResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<AudioResult>).data;
+    
+    if (!result || !result.audio || !result.audio.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating audio:', error);
+    throw error;
+  }
+}
+
+// Function to process image utilities (bg removal, depth, etc.)
+export async function processImageUtility(
+  imageUrl: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<ImageGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<ImageGenerationResult>).data;
+    
+    if (!result || !result.images || result.images.length === 0) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error processing image utility:', error);
     throw error;
   }
 }

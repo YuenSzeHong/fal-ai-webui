@@ -21,6 +21,6 @@ const VIDEO_TO_VIDEO_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('video-to-video', VIDEO_TO_VIDEO_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('video-to-video', VIDEO_TO_VIDEO_MODELS, request);
 }

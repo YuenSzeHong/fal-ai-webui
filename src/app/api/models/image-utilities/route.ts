@@ -81,6 +81,6 @@ const IMAGE_UTILITY_MODELS = [
   }
 ];
 
-export async function GET() {
-  return createModelResponse('image-utilities', IMAGE_UTILITY_MODELS);
+export async function GET(request: Request) {
+  return createModelResponse('image-utilities', IMAGE_UTILITY_MODELS, request);
 }
