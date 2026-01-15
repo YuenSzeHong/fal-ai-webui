@@ -14,10 +14,18 @@ class SimpleCache {
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
+    // Only start cleanup interval in runtime environment, not during build
+    if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      // Skip cleanup interval during build time
+      return;
+    }
+    
     // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    if (typeof setInterval !== 'undefined') {
+      this.cleanupInterval = setInterval(() => {
+        this.cleanup();
+      }, 5 * 60 * 1000);
+    }
   }
 
   /**

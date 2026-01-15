@@ -16,7 +16,13 @@ class RateLimiter {
     this.windowMs = windowMs;
     
     // Clean up expired entries every minute
-    setInterval(() => this.cleanup(), 60000);
+    // Skip during build time to avoid Deno compatibility issues
+    if (typeof setInterval !== 'undefined' && typeof process !== 'undefined') {
+      // Only run cleanup in runtime, not during build
+      if (process.env.NEXT_PHASE !== 'phase-production-build') {
+        setInterval(() => this.cleanup(), 60000);
+      }
+    }
   }
 
   check(key: string): { allowed: boolean; remaining: number; resetTime: number } {

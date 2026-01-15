@@ -49,8 +49,19 @@ const TaskQueuePanel: React.FC<TaskQueuePanelProps> = ({
   };
   
   // タスクの種類に基づくラベル
-  const getTaskTypeLabel = (type: 'image' | 'video'): string => {
-    return type === 'image' ? t('generationType.image') : t('generationType.video');
+  const getTaskTypeLabel = (type: Task['type']): string => {
+    const labels: Record<Task['type'], string> = {
+      'image': t('generationType.image'),
+      'video': t('generationType.video'),
+      'image-to-video': 'I2V',
+      'image-to-image': 'I2I',
+      'video-to-video': 'V2V',
+      'upscaling': 'Upscale',
+      'image-to-3d': '3D',
+      'audio': 'Audio',
+      'image-utilities': 'Utils'
+    };
+    return labels[type] || type;
   };
   
   // プログレスバーのスタイル
