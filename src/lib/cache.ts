@@ -12,20 +12,28 @@ interface CacheEntry<T> {
 class SimpleCache {
   private cache: Map<string, CacheEntry<any>> = new Map();
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+  private initialized: boolean = false;
 
   constructor() {
-    // Only start cleanup interval in runtime environment, not during build
-    if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-      // Skip cleanup interval during build time
+    // Don't initialize during construction to avoid build-time issues
+  }
+  
+  private ensureInitialized() {
+    if (this.initialized) return;
+    this.initialized = true;
+    
+    // Only start cleanup interval at runtime, not during build
+    if (typeof setInterval === 'undefined') return;
+    
+    // Skip if we're in build phase
+    if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
       return;
     }
     
     // Clean up expired entries every 5 minutes
-    if (typeof setInterval !== 'undefined') {
-      this.cleanupInterval = setInterval(() => {
-        this.cleanup();
-      }, 5 * 60 * 1000);
-    }
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000);
   }
 
   /**
@@ -35,6 +43,7 @@ class SimpleCache {
    * @param ttl Time to live in milliseconds (default: 5 minutes)
    */
   set<T>(key: string, data: T, ttl: number = 5 * 60 * 1000): void {
+    this.ensureInitialized();
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -48,6 +57,7 @@ class SimpleCache {
    * @returns Cached data or null if not found or expired
    */
   get<T>(key: string): T | null {
+    this.ensureInitialized();
     const entry = this.cache.get(key);
     
     if (!entry) {

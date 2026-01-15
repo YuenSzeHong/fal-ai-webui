@@ -10,22 +10,33 @@ class RateLimiter {
   private limits: Map<string, RateLimitEntry> = new Map();
   private readonly maxRequests: number;
   private readonly windowMs: number;
+  private initialized: boolean = false;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(maxRequests: number = 100, windowMs: number = 60000) {
     this.maxRequests = maxRequests;
     this.windowMs = windowMs;
+    // Don't initialize cleanup during construction to avoid build-time issues
+  }
+  
+  private ensureInitialized() {
+    if (this.initialized) return;
+    this.initialized = true;
+    
+    // Only start cleanup at runtime, not during build
+    if (typeof setInterval === 'undefined') return;
+    
+    // Skip if we're in build phase
+    if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
+      return;
+    }
     
     // Clean up expired entries every minute
-    // Skip during build time to avoid Deno compatibility issues
-    if (typeof setInterval !== 'undefined' && typeof process !== 'undefined') {
-      // Only run cleanup in runtime, not during build
-      if (process.env.NEXT_PHASE !== 'phase-production-build') {
-        setInterval(() => this.cleanup(), 60000);
-      }
-    }
+    this.cleanupInterval = setInterval(() => this.cleanup(), 60000);
   }
 
   check(key: string): { allowed: boolean; remaining: number; resetTime: number } {
+    this.ensureInitialized();
     const now = Date.now();
     const entry = this.limits.get(key);
 
