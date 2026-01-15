@@ -12,23 +12,23 @@
     "@fal-ai/client": "^1.8.3",
     "@fal-ai/server-proxy": "^1.1.2",
     "@tanstack/react-query": "^5.90.17",
-    "autoprefixer": "^10.4.17",
+    "autoprefixer": "^10.4.20",
     "i18next": "^24.2.2",
     "i18next-resources-to-backend": "^1.2.1",
-    "next": "^14.1.0",
+    "next": "^15.1.7",
     "next-i18next": "^15.4.2",
-    "postcss": "^8.4.35",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "postcss": "^8.4.49",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-i18next": "^15.4.1",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
-    "@types/node": "^20.11.19",
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "^14.1.0",
-    "typescript": "^5.3.3"
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.7",
+    "typescript": "^5.7.3"
   }
 }
