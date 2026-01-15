@@ -1,82 +1,66 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
 import cache, { CACHE_DURATIONS } from '@/lib/cache';
+import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
 const CACHE_KEY = 'models:image-to-video';
 
-// Image-to-video models available in fal.ai
-// Based on https://docs.fal.ai/model-apis
-const IMAGE_TO_VIDEO_MODELS = [
-  {
-    id: 'fal-ai/minimax/video-01/image-to-video',
-    name: 'MiniMax Video-01 I2V',
-    description: 'MiniMax image-to-video generation'
-  },
-  {
-    id: 'fal-ai/minimax/video-01-live/image-to-video',
-    name: 'MiniMax Video-01 Live I2V',
-    description: 'MiniMax live image-to-video generation'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.6/pro/image-to-video',
-    name: 'Kling Video v1.6 Pro I2V',
-    description: 'Latest Kling Pro model for image-to-video'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.6/standard/image-to-video',
-    name: 'Kling Video v1.6 Standard I2V',
-    description: 'Latest Kling Standard model for image-to-video'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.5/pro/image-to-video',
-    name: 'Kling Video v1.5 Pro I2V',
-    description: 'Kling Pro v1.5 image-to-video model'
-  },
-  {
-    id: 'fal-ai/kling-video/v1/pro/image-to-video',
-    name: 'Kling Video v1 Pro I2V',
-    description: 'Kling Pro v1 image-to-video'
-  },
-  {
-    id: 'fal-ai/kling-video/v1/standard/image-to-video',
-    name: 'Kling Video v1 Standard I2V',
-    description: 'Kling Standard v1 image-to-video'
-  },
-  {
-    id: 'fal-ai/haiper-video/v2.5/image-to-video/fast',
-    name: 'Haiper Video v2.5 Fast I2V',
-    description: 'Fast Haiper v2.5 image-to-video generation'
-  },
-  {
-    id: 'fal-ai/haiper-video/v2/image-to-video',
-    name: 'Haiper Video v2 I2V',
-    description: 'Haiper v2 image-to-video model'
-  },
-  {
-    id: 'fal-ai/luma-dream-machine/image-to-video',
-    name: 'Luma Dream Machine I2V',
-    description: 'Luma Dream Machine image-to-video'
-  },
-  {
-    id: 'fal-ai/ltx-video/image-to-video',
-    name: 'LTX Video I2V',
-    description: 'LTX image-to-video model'
-  },
-  {
-    id: 'fal-ai/cogvideox-5b/image-to-video',
-    name: 'CogVideoX-5B I2V',
-    description: 'CogVideoX 5B image-to-video'
-  },
-
-];
+async function getDynamicModels() {
+  try {
+    console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
+    const allModels = await fetchFalModels();
+    const filtered = filterModelsByCategory(allModels, 'image-to-video');
+    const models = filtered.map(convertToModelInfo);
+    
+    if (models.length > 0) {
+      console.log(`[Dynamic Fetch] Successfully fetched ${models.length} image-to-video models`);
+      return models;
+    }
+    throw new Error('No image-to-video models found');
+  } catch (error) {
+    console.error('[Dynamic Fetch] Failed:', error);
+    throw error;
+  }
+}
 
 export async function GET(request: Request) {
-  const cachedModels = cache.get<typeof IMAGE_TO_VIDEO_MODELS>(CACHE_KEY);
+  // Check cache first
+  const cachedModels = cache.get<ReturnType<typeof convertToModelInfo>[]>(CACHE_KEY);
   if (cachedModels) {
     console.log('[Cache HIT] image-to-video models');
     return createModelResponse('image-to-video', cachedModels, request);
   }
+
   console.log('[Cache MISS] image-to-video models');
-  cache.set(CACHE_KEY, IMAGE_TO_VIDEO_MODELS, CACHE_DURATIONS.MODEL_LIST);
-  return createModelResponse('image-to-video', IMAGE_TO_VIDEO_MODELS, request);
+  
+  // Try dynamic fetch
+  try {
+    const dynamicModels = await getDynamicModels();
+    
+    if (dynamicModels && dynamicModels.length > 0) {
+      console.log(`[Dynamic Models] Using ${dynamicModels.length} models from fal.ai API`);
+      cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
+      return createModelResponse('image-to-video', dynamicModels, request);
+    }
+    
+    // No models found
+    return NextResponse.json(
+      { 
+        error: 'No models available',
+        message: 'Failed to fetch image-to-video models from fal.ai API. No models found.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  } catch (error) {
+    console.error('[Server] Error fetching image-to-video models:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch models',
+        message: 'Unable to connect to fal.ai API. Please try again later.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  }
 }

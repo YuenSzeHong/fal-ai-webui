@@ -1,96 +1,66 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
 import cache, { CACHE_DURATIONS } from '@/lib/cache';
+import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
 const CACHE_KEY = 'models:image-utilities';
 
-// Image utility models available in fal.ai (depth, background removal, segmentation, etc.)
-// Based on https://docs.fal.ai/model-apis
-const IMAGE_UTILITY_MODELS = [
-  {
-    id: 'fal-ai/imageutils/rembg',
-    name: 'Background Removal',
-    description: 'Remove backgrounds from images'
-  },
-  {
-    id: 'fal-ai/imageutils/depth',
-    name: 'Depth Estimation',
-    description: 'Generate depth maps from images'
-  },
-  {
-    id: 'fal-ai/imageutils/marigold-depth',
-    name: 'Marigold Depth',
-    description: 'High-quality depth estimation'
-  },
-  {
-    id: 'fal-ai/sam2/image',
-    name: 'SAM2 Image Segmentation',
-    description: 'Segment Anything Model 2 for images'
-  },
-  {
-    id: 'fal-ai/sam2/video',
-    name: 'SAM2 Video Segmentation',
-    description: 'Segment Anything Model 2 for video'
-  },
-  {
-    id: 'fal-ai/imageutils/sam',
-    name: 'SAM Segmentation',
-    description: 'Segment Anything Model'
-  },
-  {
-    id: 'fal-ai/dwpose',
-    name: 'DWPose',
-    description: 'Human pose estimation'
-  },
-  {
-    id: 'fal-ai/auto-caption',
-    name: 'Auto Caption',
-    description: 'Automatic image captioning'
-  },
-  {
-    id: 'fal-ai/florence-2-large/caption',
-    name: 'Florence-2 Caption',
-    description: 'Florence-2 image captioning'
-  },
-  {
-    id: 'fal-ai/florence-2-large/detailed-caption',
-    name: 'Florence-2 Detailed Caption',
-    description: 'Detailed image captioning'
-  },
-  {
-    id: 'fal-ai/florence-2-large/object-detection',
-    name: 'Florence-2 Object Detection',
-    description: 'Detect objects in images'
-  },
-  {
-    id: 'fal-ai/florence-2-large/ocr',
-    name: 'Florence-2 OCR',
-    description: 'Optical character recognition'
-  },
-  {
-    id: 'fal-ai/image-preprocessors/depth-anything/v2',
-    name: 'Depth Anything V2',
-    description: 'Depth estimation preprocessor'
-  },
-  {
-    id: 'fal-ai/image-preprocessors/canny',
-    name: 'Canny Edge Detection',
-    description: 'Canny edge detection'
-  },
-  {
-    id: 'fal-ai/workflowutils/canny',
-    name: 'Workflow Canny',
-    description: 'Canny edge for workflows'
+async function getDynamicModels() {
+  try {
+    console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
+    const allModels = await fetchFalModels();
+    const filtered = filterModelsByCategory(allModels, 'image-utilities');
+    const models = filtered.map(convertToModelInfo);
+    
+    if (models.length > 0) {
+      console.log(`[Dynamic Fetch] Successfully fetched ${models.length} image-utilities models`);
+      return models;
+    }
+    throw new Error('No image-utilities models found');
+  } catch (error) {
+    console.error('[Dynamic Fetch] Failed:', error);
+    throw error;
   }
-];
+}
 
 export async function GET(request: Request) {
-  const cachedModels = cache.get<typeof IMAGE_UTILITY_MODELS>(CACHE_KEY);
+  // Check cache first
+  const cachedModels = cache.get<ReturnType<typeof convertToModelInfo>[]>(CACHE_KEY);
   if (cachedModels) {
     console.log('[Cache HIT] image-utilities models');
     return createModelResponse('image-utilities', cachedModels, request);
   }
+
   console.log('[Cache MISS] image-utilities models');
-  cache.set(CACHE_KEY, IMAGE_UTILITY_MODELS, CACHE_DURATIONS.MODEL_LIST);
-  return createModelResponse('image-utilities', IMAGE_UTILITY_MODELS, request);
+  
+  // Try dynamic fetch
+  try {
+    const dynamicModels = await getDynamicModels();
+    
+    if (dynamicModels && dynamicModels.length > 0) {
+      console.log(`[Dynamic Models] Using ${dynamicModels.length} models from fal.ai API`);
+      cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
+      return createModelResponse('image-utilities', dynamicModels, request);
+    }
+    
+    // No models found
+    return NextResponse.json(
+      { 
+        error: 'No models available',
+        message: 'Failed to fetch image-utilities models from fal.ai API. No models found.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  } catch (error) {
+    console.error('[Server] Error fetching image-utilities models:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch models',
+        message: 'Unable to connect to fal.ai API. Please try again later.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  }
 }

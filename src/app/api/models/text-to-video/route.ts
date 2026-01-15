@@ -1,111 +1,66 @@
 import { NextResponse } from 'next/server';
 import { createModelResponse } from '../model-response-helper';
 import cache, { CACHE_DURATIONS } from '@/lib/cache';
+import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
 const CACHE_KEY = 'models:text-to-video';
 
-// Text-to-video models available in fal.ai
-// Based on https://docs.fal.ai/model-apis
-const TEXT_TO_VIDEO_MODELS = [
-  {
-    id: 'fal-ai/minimax/video-01',
-    name: 'MiniMax Video-01',
-    description: 'MiniMax text-to-video generation model'
-  },
-  {
-    id: 'fal-ai/minimax/video-01-live',
-    name: 'MiniMax Video-01 Live',
-    description: 'Live MiniMax text-to-video generation'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.6/pro/text-to-video',
-    name: 'Kling Video v1.6 Pro',
-    description: 'Latest Kling Pro model for high-quality video generation'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.6/standard/text-to-video',
-    name: 'Kling Video v1.6 Standard',
-    description: 'Latest Kling Standard model for text-to-video'
-  },
-  {
-    id: 'fal-ai/kling-video/v1.5/pro/text-to-video',
-    name: 'Kling Video v1.5 Pro',
-    description: 'Kling Pro v1.5 text-to-video model'
-  },
-  {
-    id: 'fal-ai/kling-video/v1/pro/text-to-video',
-    name: 'Kling Video v1 Pro',
-    description: 'Kling Pro v1 text-to-video model'
-  },
-  {
-    id: 'fal-ai/kling-video/v1/standard/text-to-video',
-    name: 'Kling Video v1 Standard',
-    description: 'Kling Standard v1 text-to-video model'
-  },
-  {
-    id: 'fal-ai/hunyuan-video',
-    name: 'Hunyuan Video',
-    description: 'Hunyuan text-to-video generation'
-  },
-  {
-    id: 'fal-ai/hunyuan-video-lora',
-    name: 'Hunyuan Video LoRA',
-    description: 'Hunyuan video with LoRA fine-tuning'
-  },
-  {
-    id: 'fal-ai/mochi-v1',
-    name: 'Mochi V1',
-    description: 'Mochi text-to-video model'
-  },
-  {
-    id: 'fal-ai/ltx-video',
-    name: 'LTX Video',
-    description: 'LTX text-to-video model'
-  },
-  {
-    id: 'fal-ai/cogvideox-5b',
-    name: 'CogVideoX-5B',
-    description: 'CogVideoX 5B parameter model'
-  },
-  {
-    id: 'fal-ai/haiper-video/v2',
-    name: 'Haiper Video V2',
-    description: 'Haiper V2 text-to-video'
-  },
-  {
-    id: 'fal-ai/haiper-video/v2.5/fast',
-    name: 'Haiper Video V2.5 Fast',
-    description: 'Fast Haiper V2.5 text-to-video'
-  },
-  {
-    id: 'fal-ai/luma-dream-machine',
-    name: 'Luma Dream Machine',
-    description: 'Luma Dream Machine text-to-video'
-  },
-
-  {
-    id: 'fal-ai/fast-animatediff/text-to-video',
-    name: 'Fast AnimateDiff',
-    description: 'Fast AnimateDiff text-to-video generation'
-  },
-  {
-    id: 'fal-ai/fast-animatediff/turbo/text-to-video',
-    name: 'Fast AnimateDiff Turbo',
-    description: 'Turbo AnimateDiff text-to-video'
+async function getDynamicModels() {
+  try {
+    console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
+    const allModels = await fetchFalModels();
+    const filtered = filterModelsByCategory(allModels, 'text-to-video');
+    const models = filtered.map(convertToModelInfo);
+    
+    if (models.length > 0) {
+      console.log(`[Dynamic Fetch] Successfully fetched ${models.length} text-to-video models`);
+      return models;
+    }
+    throw new Error('No text-to-video models found');
+  } catch (error) {
+    console.error('[Dynamic Fetch] Failed:', error);
+    throw error;
   }
-];
+}
 
 export async function GET(request: Request) {
   // Check cache first
-  const cachedModels = cache.get<typeof TEXT_TO_VIDEO_MODELS>(CACHE_KEY);
+  const cachedModels = cache.get<ReturnType<typeof convertToModelInfo>[]>(CACHE_KEY);
   if (cachedModels) {
     console.log('[Cache HIT] text-to-video models');
     return createModelResponse('text-to-video', cachedModels, request);
   }
 
-  // Cache miss - store in cache
-  console.log('[Cache MISS] text-to-video models - caching for', CACHE_DURATIONS.MODEL_LIST / 1000, 'seconds');
-  cache.set(CACHE_KEY, TEXT_TO_VIDEO_MODELS, CACHE_DURATIONS.MODEL_LIST);
+  console.log('[Cache MISS] text-to-video models');
   
-  return createModelResponse('text-to-video', TEXT_TO_VIDEO_MODELS, request);
+  // Try dynamic fetch
+  try {
+    const dynamicModels = await getDynamicModels();
+    
+    if (dynamicModels && dynamicModels.length > 0) {
+      console.log(`[Dynamic Models] Using ${dynamicModels.length} models from fal.ai API`);
+      cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
+      return createModelResponse('text-to-video', dynamicModels, request);
+    }
+    
+    // No models found
+    return NextResponse.json(
+      { 
+        error: 'No models available',
+        message: 'Failed to fetch text-to-video models from fal.ai API. No models found.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  } catch (error) {
+    console.error('[Server] Error fetching text-to-video models:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch models',
+        message: 'Unable to connect to fal.ai API. Please try again later.',
+        models: [] 
+      },
+      { status: 503 }
+    );
+  }
 }
