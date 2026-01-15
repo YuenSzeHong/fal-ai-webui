@@ -28,11 +28,9 @@ export interface FalModelInfo {
 }
 
 export interface FalModelsListResponse {
-  data?: FalModelInfo[]; // New v1 format
-  models?: FalModelInfo[]; // Legacy format
-  list?: FalModelInfo[]; // Alternative format
+  models?: FalModelInfo[]; // Main v1 format from Context7 docs
+  data?: FalModelInfo[]; // Alternative format with pagination
   next_cursor?: string | null;
-  next_page_cursor?: string;
   has_more?: boolean;
 }
 
@@ -91,10 +89,13 @@ export async function fetchFalModels(options?: {
 
     const data: FalModelsListResponse = await response.json();
     
-    // Handle different response formats
-    const models = data.data || data.list || data.models || [];
+    // Handle different response formats - prioritize 'models' per Context7 docs
+    const models = data.models || data.data || [];
     
-    console.log(`[Fal API] Successfully fetched ${models.length} models from fal.ai`);
+    console.log(`[Fal API] Successfully fetched ${models.length} models`);
+    if (models.length > 0) {
+      console.log(`[Fal API] Sample model:`, models[0]);
+    }
     
     return models;
   } catch (error) {
