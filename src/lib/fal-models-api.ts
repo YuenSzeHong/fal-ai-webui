@@ -29,6 +29,12 @@ export interface FalModelsListResponse {
  * @returns List of available models
  */
 export async function fetchFalModels(apiKey?: string): Promise<FalModelInfo[]> {
+  // Skip fetch during build phase
+  if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('[Fal API] Skipping fetch during build phase');
+    return [];
+  }
+  
   const headers: Record<string, string> = {
     'Accept': 'application/json',
   };
