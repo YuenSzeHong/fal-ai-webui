@@ -6,29 +6,47 @@
 
 const FAL_API_BASE = 'https://rest.alpha.fal.ai';
 
-export interface FalModelInfo {
-  id: string;
-  name?: string;
-  description?: string;
+export interface FalModelMetadata {
+  display_name?: string;
   category?: string;
-  visibility?: 'public' | 'private';
+  description?: string;
+  status?: string;
   tags?: string[];
-  created_at?: string;
   updated_at?: string;
+  is_favorited?: boolean;
+  thumbnail_url?: string;
+  model_url?: string;
+}
+
+export interface FalModelInfo {
+  endpoint_id: string;
+  metadata?: FalModelMetadata;
+  id?: string; // Legacy field
+  name?: string; // Legacy field
+  description?: string; // Legacy field
+  category?: string; // Legacy field
 }
 
 export interface FalModelsListResponse {
-  models: FalModelInfo[];
-  total?: number;
-  next_cursor?: string;
+  data?: FalModelInfo[]; // New v1 format
+  models?: FalModelInfo[]; // Legacy format
+  list?: FalModelInfo[]; // Alternative format
+  next_cursor?: string | null;
+  next_page_cursor?: string;
+  has_more?: boolean;
 }
 
 /**
- * Fetch all available models from fal.ai Platform API
- * @param apiKey Optional API key for authentication (not required for public models)
+ * Fetch models from fal.ai Platform API with optional filtering
+ * @param options Fetch options including category filter, limit, and API key
  * @returns List of available models
  */
-export async function fetchFalModels(apiKey?: string): Promise<FalModelInfo[]> {
+export async function fetchFalModels(options?: {
+  category?: string;
+  limit?: number;
+  apiKey?: string;
+  status?: 'active' | 'deprecated';
+}): Promise<FalModelInfo[]> {
   // Skip fetch during build phase
   if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
     console.log('[Fal API] Skipping fetch during build phase');
@@ -39,34 +57,56 @@ export async function fetchFalModels(apiKey?: string): Promise<FalModelInfo[]> {
     'Accept': 'application/json',
   };
 
-  // Add API key if provided (for accessing private models or rate limits)
-  if (apiKey) {
-    headers['Authorization'] = `Key ${apiKey}`;
+  // Add API key if provided
+  if (options?.apiKey) {
+    headers['Authorization'] = `Key ${options.apiKey}`;
   }
 
+  // Build query parameters
+  const params = new URLSearchParams();
+  if (options?.category) {
+    params.append('category', options.category);
+  }
+  if (options?.limit) {
+    params.append('limit', options.limit.toString());
+  }
+  if (options?.status) {
+    params.append('status', options.status);
+  }
+  
+  const url = `${FAL_API_BASE}/models${params.toString() ? `?${params.toString()}` : ''}`;
+
   try {
-    const response = await fetch(`${FAL_API_BASE}/models`, {
+    console.log(`[Fal API] Fetching models from ${url}`);
+    
+    const response = await fetch(url, {
       headers,
       cache: 'no-store', // Don't cache at fetch level, use our cache
+      signal: AbortSignal.timeout(10000), // 10 second timeout
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data: FalModelsListResponse = await response.json();
     
-    console.log(`[Fal API] Fetched ${data.models?.length || 0} models from fal.ai`);
+    // Handle different response formats
+    const models = data.data || data.list || data.models || [];
     
-    return data.models || [];
+    console.log(`[Fal API] Successfully fetched ${models.length} models from fal.ai`);
+    
+    return models;
   } catch (error) {
-    console.error('[Fal API] Error fetching models from fal.ai:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[Fal API] Error fetching models:', errorMessage);
+    throw new Error(`Failed to fetch models from fal.ai: ${errorMessage}`);
   }
 }
 
 /**
- * Filter models by category/type
+ * Filter models by category/type using pattern matching
+ * This is a fallback for when category parameter doesn't work with the API
  */
 export function filterModelsByCategory(models: FalModelInfo[], category: string): FalModelInfo[] {
   const categoryPatterns: Record<string, RegExp[]> = {
@@ -139,7 +179,14 @@ export function filterModelsByCategory(models: FalModelInfo[], category: string)
   const patterns = categoryPatterns[category] || [];
   
   return models.filter(model => {
-    const searchText = `${model.id} ${model.name || ''} ${model.description || ''} ${(model.tags || []).join(' ')}`.toLowerCase();
+    // Get the model ID and metadata
+    const modelId = model.endpoint_id || model.id || '';
+    const modelCategory = model.metadata?.category || model.category || '';
+    const modelName = model.metadata?.display_name || model.name || '';
+    const modelDescription = model.metadata?.description || model.description || '';
+    const modelTags = model.metadata?.tags || [];
+    
+    const searchText = `${modelId} ${modelName} ${modelDescription} ${modelCategory} ${modelTags.join(' ')}`.toLowerCase();
     return patterns.some(pattern => pattern.test(searchText));
   });
 }
@@ -148,13 +195,17 @@ export function filterModelsByCategory(models: FalModelInfo[], category: string)
  * Convert FalModelInfo to our ModelInfo format
  */
 export function convertToModelInfo(falModel: FalModelInfo) {
+  const modelId = falModel.endpoint_id || falModel.id || '';
+  const modelName = falModel.metadata?.display_name || falModel.name || formatModelName(modelId);
+  const modelDescription = falModel.metadata?.description || falModel.description || '';
+  
   return {
-    id: falModel.id,
-    name: falModel.name || formatModelName(falModel.id),
-    description: falModel.description || '',
+    id: modelId,
+    name: modelName,
+    description: modelDescription,
     // Safety filter support - assume FLUX models support it, others don't
-    supportsSafetyFilter: falModel.id.includes('flux'),
-    safetyFilterNote: falModel.id.includes('flux') 
+    supportsSafetyFilter: modelId.toLowerCase().includes('flux'),
+    safetyFilterNote: modelId.toLowerCase().includes('flux') 
       ? undefined 
       : 'Safety filter cannot be disabled on this model',
   };

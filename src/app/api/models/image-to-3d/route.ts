@@ -7,21 +7,33 @@ import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/li
 export const dynamic = 'force-dynamic';
 
 const CACHE_KEY = 'models:image-to-3d';
+const CATEGORY = 'image-to-3d';
 
 async function getDynamicModels() {
   try {
-    console.log('[Dynamic Fetch] Attempting to fetch models from fal.ai Platform API');
-    const allModels = await fetchFalModels();
-    const filtered = filterModelsByCategory(allModels, 'image-to-3d');
-    const models = filtered.map(convertToModelInfo);
+    console.log(`[${CATEGORY}] Fetching from fal.ai Platform API with category filter`);
     
-    if (models.length > 0) {
-      console.log(`[Dynamic Fetch] Successfully fetched ${models.length} image-to-3d models`);
-      return models;
+    // Try fetching with category parameter first (most efficient)
+    let models = await fetchFalModels({ category: CATEGORY, status: 'active', limit: 100 });
+    
+    // If category filter doesn't return results, fetch all and filter locally
+    if (models.length === 0) {
+      console.log(`[${CATEGORY}] Category filter returned no results, fetching all models`);
+      const allModels = await fetchFalModels({ status: 'active', limit: 500 });
+      models = filterModelsByCategory(allModels, CATEGORY);
     }
-    throw new Error('No image-to-3d models found');
+    
+    const converted = models.map(convertToModelInfo);
+    
+    if (converted.length === 0) {
+      throw new Error(`No ${CATEGORY} models found in fal.ai API`);
+    }
+    
+    console.log(`[${CATEGORY}] Successfully fetched ${converted.length} models`);
+    return converted;
   } catch (error) {
-    console.error('[Dynamic Fetch] Failed:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[${CATEGORY}] Error:`, errorMessage);
     throw error;
   }
 }
@@ -30,37 +42,30 @@ export async function GET(request: Request) {
   // Check cache first
   const cachedModels = cache.get<ReturnType<typeof convertToModelInfo>[]>(CACHE_KEY);
   if (cachedModels) {
-    console.log('[Cache HIT] image-to-3d models');
-    return createModelResponse('image-to-3d', cachedModels, request);
+    console.log(`[Cache HIT] ${CATEGORY} models (${cachedModels.length} models)`);
+    return createModelResponse(CATEGORY, cachedModels, request);
   }
 
-  console.log('[Cache MISS] image-to-3d models');
+  console.log(`[Cache MISS] ${CATEGORY} models - fetching from fal.ai`);
   
-  // Try dynamic fetch
+  // Fetch from fal.ai Platform API
   try {
     const dynamicModels = await getDynamicModels();
     
-    if (dynamicModels && dynamicModels.length > 0) {
-      console.log(`[Dynamic Models] Using ${dynamicModels.length} models from fal.ai API`);
-      cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
-      return createModelResponse('image-to-3d', dynamicModels, request);
-    }
+    // Cache the results
+    cache.set(CACHE_KEY, dynamicModels, CACHE_DURATIONS.MODEL_LIST);
+    console.log(`[${CATEGORY}] Cached ${dynamicModels.length} models for ${CACHE_DURATIONS.MODEL_LIST / 1000 / 60} minutes`);
     
-    // No models found
-    return NextResponse.json(
-      { 
-        error: 'No models available',
-        message: 'Failed to fetch image-to-3d models from fal.ai API. No models found.',
-        models: [] 
-      },
-      { status: 503 }
-    );
+    return createModelResponse(CATEGORY, dynamicModels, request);
   } catch (error) {
-    console.error('[Server] Error fetching image-to-3d models:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[${CATEGORY}] Fatal error:`, errorMessage);
+    
     return NextResponse.json(
       { 
-        error: 'Failed to fetch models',
-        message: 'Unable to connect to fal.ai API. Please try again later.',
+        error: 'Service temporarily unavailable',
+        message: `Unable to fetch ${CATEGORY} models from fal.ai API: ${errorMessage}`,
+        details: 'The fal.ai Platform API is currently unavailable. Please try again in a few moments.',
         models: [] 
       },
       { status: 503 }
