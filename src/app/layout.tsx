@@ -1,6 +1,7 @@
 import './globals.css'
 import { NotificationProvider } from '@/components/common/NotificationContext'
 import { TranslationsProvider } from '@/components/TranslationsProvider'
+import { QueryProvider } from '@/lib/query-client'
 import type { Metadata } from 'next'
 
 // Use system font stack as fallback for environments without internet access
@@ -21,13 +22,15 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body className={fontClassName}>
-        <NotificationProvider>
-          <TranslationsProvider locale={locale}>
-            <main className="min-h-screen">
-              {children}
-            </main>
-          </TranslationsProvider>
-        </NotificationProvider>
+        <QueryProvider>
+          <NotificationProvider>
+            <TranslationsProvider locale={locale}>
+              <main className="min-h-screen">
+                {children}
+              </main>
+            </TranslationsProvider>
+          </NotificationProvider>
+        </QueryProvider>
       </body>
     </html>
   )
