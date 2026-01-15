@@ -3,6 +3,9 @@ import { createModelResponse } from '../model-response-helper';
 import cache, { CACHE_DURATIONS } from '@/lib/cache';
 import { fetchFalModels, filterModelsByCategory, convertToModelInfo } from '@/lib/fal-models-api';
 
+// Force dynamic rendering - don't prerender during build
+export const dynamic = 'force-dynamic';
+
 const CACHE_KEY = 'models:image-to-video';
 
 async function getDynamicModels() {
