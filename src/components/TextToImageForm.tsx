@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   DEFAULT_MODELS,
-  ModelInfo,
-  fetchModels,
   ImageGenerationResult, 
   OutputFormat, 
   ImageAspectRatio, 
@@ -13,6 +11,7 @@ import {
 import { taskQueue, Task } from '@/lib/task-queue';
 import { addImageToHistory } from '@/lib/history-store';
 import { useTranslations } from '@/lib/useTranslations';
+import { useModels } from '@/hooks/useModels';
 
 interface TextToImageFormProps {
   onResultChange?: (result: ImageGenerationResult | null) => void;
@@ -60,39 +59,12 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const [result, setResult] = useState<ImageGenerationResult | null>(null);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
   
-  // Model loading state
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(true);
-  const [modelsError, setModelsError] = useState<string | null>(null);
+  // Use TanStack Query hook for model loading
+  const { data: models = [], isLoading: modelsLoading, error: modelsError } = useModels('text-to-image');
   
   // Get current model info
   const currentModel = models.find(m => m.id === selectedModel);
   const safetyFilterDisabled = currentModel && currentModel.supportsSafetyFilter === false;
-
-  // Fetch available models on mount
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        setModelsLoading(true);
-        const fetchedModels = await fetchModels('text-to-image');
-        setModels(fetchedModels);
-        setModelsError(null);
-      } catch (err) {
-        console.error('Failed to load models:', err);
-        setModelsError('Failed to load models');
-        // Use a fallback model list
-        setModels([{ 
-          id: DEFAULT_MODELS.textToImage, 
-          name: 'FLUX1.1 [pro] ultra', 
-          description: 'Default model' 
-        }]);
-      } finally {
-        setModelsLoading(false);
-      }
-    };
-    
-    loadModels();
-  }, []);
 
   // 状態が変更されたときに親コンポーネントに通知
   useEffect(() => {

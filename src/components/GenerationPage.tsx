@@ -33,6 +33,7 @@ import CopyToClipboardButton from './common/CopyToClipboardButton';
 import UseForGenerationButton from './common/UseForGenerationButton';
 import { useTranslations } from '@/lib/useTranslations';
 import ImageZoomModal from './common/ImageZoomModal';
+import { useModelCounts } from '@/hooks/useModels';
 
 type GenerationType = 
   | 'text-to-image' 
@@ -81,8 +82,8 @@ const GenerationPage: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [formKey, setFormKey] = useState(0); // コンポーネントの強制再マウント用
   
-  // Model counts state
-  const [modelCounts, setModelCounts] = useState<Record<string, number>>({});
+  // Use TanStack Query hook for model counts
+  const { data: modelCounts } = useModelCounts();
   
   // フォームの状態を保持するためのステート
   const [imageFormState, setImageFormState] = useState<ImageFormState>({
@@ -111,30 +112,6 @@ const GenerationPage: React.FC = () => {
   // 画像拡大モーダルの状態
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState('');
-  
-  // Fetch model counts on mount
-  useEffect(() => {
-    const fetchModelCounts = async () => {
-      const categories = ['text-to-image', 'text-to-video', 'image-to-video', 'image-to-image', 'video-to-video', 'upscaling', 'image-to-3d', 'audio', 'image-utilities'];
-      const counts: Record<string, number> = {};
-      
-      await Promise.all(categories.map(async (category) => {
-        try {
-          const response = await fetch(`/api/models/${category}`);
-          if (response.ok) {
-            const data = await response.json();
-            counts[category] = data.models?.length || 0;
-          }
-        } catch (error) {
-          console.warn(`Failed to fetch model count for ${category}:`, error);
-        }
-      }));
-      
-      setModelCounts(counts);
-    };
-    
-    fetchModelCounts();
-  }, []);
   
   // Reset the selected image index when the image result changes
   useEffect(() => {

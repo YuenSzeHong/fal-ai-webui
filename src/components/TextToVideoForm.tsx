@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   DEFAULT_MODELS,
-  ModelInfo,
-  fetchModels,
   VideoGenerationResult,
   VideoResolution,
   VideoAspectRatio
@@ -12,6 +10,7 @@ import {
 import { taskQueue, Task } from '@/lib/task-queue';
 import { addVideoToHistory } from '@/lib/history-store';
 import { useTranslations } from '@/lib/useTranslations';
+import { useModels } from '@/hooks/useModels';
 
 interface TextToVideoFormProps {
   onResultChange?: (result: VideoGenerationResult | null) => void;
@@ -56,35 +55,8 @@ const TextToVideoForm: React.FC<TextToVideoFormProps> = ({
   const [result, setResult] = useState<VideoGenerationResult | null>(null);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
   
-  // Model loading state
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(true);
-  const [modelsError, setModelsError] = useState<string | null>(null);
-
-  // Fetch available models on mount
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        setModelsLoading(true);
-        const fetchedModels = await fetchModels('text-to-video');
-        setModels(fetchedModels);
-        setModelsError(null);
-      } catch (err) {
-        console.error('Failed to load models:', err);
-        setModelsError('Failed to load models');
-        // Use a fallback model list
-        setModels([{ 
-          id: DEFAULT_MODELS.textToVideo, 
-          name: 'MiniMax Video-01', 
-          description: 'Default model' 
-        }]);
-      } finally {
-        setModelsLoading(false);
-      }
-    };
-    
-    loadModels();
-  }, []);
+  // Use TanStack Query hook for model loading
+  const { data: models = [], isLoading: modelsLoading, error: modelsError } = useModels('text-to-video');
 
   // 状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
