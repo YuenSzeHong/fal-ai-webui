@@ -11,15 +11,15 @@ const CATEGORY = 'text-to-video';
 
 async function getDynamicModels() {
   try {
-    console.log(`[${CATEGORY}] Fetching from fal.ai Platform API with category filter`);
+    console.log(`[${CATEGORY}] Fetching ALL models from fal.ai Platform API with pagination`);
     
-    // Try fetching with category parameter first (most efficient)
-    let models = await fetchFalModels({ category: CATEGORY, status: 'active', limit: 100 });
+    // Fetch ALL models with pagination enabled
+    let models = await fetchFalModels({ category: CATEGORY, status: 'active', fetchAll: true });
     
     // If category filter doesn't return results, fetch all and filter locally
     if (models.length === 0) {
-      console.log(`[${CATEGORY}] Category filter returned no results, fetching all models`);
-      const allModels = await fetchFalModels({ status: 'active', limit: 500 });
+      console.log(`[${CATEGORY}] Category filter returned no results, fetching all models with pagination`);
+      const allModels = await fetchFalModels({ status: 'active', fetchAll: true });
       models = filterModelsByCategory(allModels, CATEGORY);
     }
     

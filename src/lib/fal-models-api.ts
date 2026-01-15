@@ -49,6 +49,7 @@ export async function fetchFalModels(options?: {
   limit?: number;
   apiKey?: string;
   status?: 'active' | 'deprecated';
+  fetchAll?: boolean; // Fetch all pages via pagination
 }): Promise<FalModelInfo[]> {
   // Skip fetch during build phase
   if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
@@ -65,52 +66,97 @@ export async function fetchFalModels(options?: {
     headers['Authorization'] = `Key ${options.apiKey}`;
   }
 
-  // Build query parameters
-  const params = new URLSearchParams();
-  if (options?.category) {
-    params.append('category', options.category);
-  }
-  if (options?.limit) {
-    params.append('limit', options.limit.toString());
-  }
-  if (options?.status) {
-    params.append('status', options.status);
-  }
+  const allModels: FalModelInfo[] = [];
+  let cursor: string | null = null;
+  let pageNumber = 1;
+
+  do {
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (options?.category) {
+      params.append('category', options.category);
+    }
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    if (options?.status) {
+      params.append('status', options.status);
+    }
+    if (cursor) {
+      params.append('cursor', cursor);
+    }
+    
+    const url = `${FAL_API_BASE}/models${params.toString() ? `?${params.toString()}` : ''}`;
+
+    try {
+      console.log(`[Fal API] Fetching models page ${pageNumber} from ${url}`);
+      
+      const response = await fetch(url, {
+        headers,
+        cache: 'no-store', // Don't cache at fetch level, use our cache
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: FalModelsListResponse = await response.json();
+      
+      // Handle different response formats per official Context7 docs
+      // PRIMARY format is 'list' array per official docs at https://docs.fal.ai/platform-apis/v1/models
+      // Alternative formats: 'models' and 'data' (for pagination)
+      const models = data.list || data.models || data.data || [];
+      
+      console.log(`[Fal API] Page ${pageNumber}: fetched ${models.length} models`);
+      console.log(`[Fal API] Response format used:`, data.list ? 'list (primary)' : data.models ? 'models' : data.data ? 'data' : 'empty');
+      if (pageNumber === 1 && models.length > 0) {
+        console.log(`[Fal API] Sample model structure:`, JSON.stringify(models[0], null, 2));
+      }
+      
+      allModels.push(...models);
+      
+      // Check if there are more pages
+      cursor = data.next_page_cursor || data.next_cursor || null;
+      const hasMore = data.has_more ?? (cursor !== null);
+      
+      console.log(`[Fal API] Pagination: has_more=${hasMore}, cursor=${cursor ? 'present' : 'null'}`);
+      
+      // If not fetching all pages, break after first page
+      if (!options?.fetchAll) {
+        break;
+      }
+      
+      // If no more pages, stop
+      if (!hasMore || !cursor) {
+        break;
+      }
+      
+      pageNumber++;
+      
+      // Safety limit: max 10 pages to prevent infinite loops
+      if (pageNumber > 10) {
+        console.warn(`[Fal API] Reached maximum page limit (10). Stopping pagination.`);
+        break;
+      }
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[Fal API] Error fetching models page ${pageNumber}:`, errorMessage);
+      
+      // If it's the first page, throw the error
+      if (pageNumber === 1) {
+        throw new Error(`Failed to fetch models from fal.ai: ${errorMessage}`);
+      }
+      
+      // If we already have some models from previous pages, return what we have
+      console.warn(`[Fal API] Returning ${allModels.length} models from ${pageNumber - 1} pages`);
+      break;
+    }
+  } while (cursor && options?.fetchAll);
   
-  const url = `${FAL_API_BASE}/models${params.toString() ? `?${params.toString()}` : ''}`;
-
-  try {
-    console.log(`[Fal API] Fetching models from ${url}`);
-    
-    const response = await fetch(url, {
-      headers,
-      cache: 'no-store', // Don't cache at fetch level, use our cache
-      signal: AbortSignal.timeout(10000), // 10 second timeout
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data: FalModelsListResponse = await response.json();
-    
-    // Handle different response formats per official Context7 docs
-    // PRIMARY format is 'list' array per official docs at https://docs.fal.ai/platform-apis/v1/models
-    // Alternative formats: 'models' and 'data' (for pagination)
-    const models = data.list || data.models || data.data || [];
-    
-    console.log(`[Fal API] Successfully fetched ${models.length} models`);
-    console.log(`[Fal API] Response format used:`, data.list ? 'list (primary)' : data.models ? 'models' : data.data ? 'data' : 'empty');
-    if (models.length > 0) {
-      console.log(`[Fal API] Sample model structure:`, JSON.stringify(models[0], null, 2));
-    }
-    
-    return models;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[Fal API] Error fetching models:', errorMessage);
-    throw new Error(`Failed to fetch models from fal.ai: ${errorMessage}`);
-  }
+  console.log(`[Fal API] Total models fetched: ${allModels.length} from ${pageNumber} page(s)`);
+  return allModels;
 }
 
 /**
