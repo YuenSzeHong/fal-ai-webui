@@ -28,11 +28,15 @@ export interface FalModelInfo {
 }
 
 export interface FalModelsListResponse {
-  models?: FalModelInfo[]; // Main v1 format from Context7 docs
-  list?: FalModelInfo[]; // Alternative list format
-  data?: FalModelInfo[]; // Alternative data format with pagination
+  list?: FalModelInfo[]; // PRIMARY format per official docs at https://docs.fal.ai/platform-apis/v1/models
+  models?: FalModelInfo[]; // Alternative format
+  data?: FalModelInfo[]; // Alternative format with pagination
+  next_page_cursor?: string | null;
   next_cursor?: string | null;
   has_more?: boolean;
+  total?: number;
+  limit?: number;
+  offset?: number;
 }
 
 /**
@@ -90,12 +94,13 @@ export async function fetchFalModels(options?: {
 
     const data: FalModelsListResponse = await response.json();
     
-    // Handle different response formats per Context7 docs
-    // Try 'models' first (most common), then 'list', then 'data'
-    const models = data.models || data.list || data.data || [];
+    // Handle different response formats per official Context7 docs
+    // PRIMARY format is 'list' array per official docs at https://docs.fal.ai/platform-apis/v1/models
+    // Alternative formats: 'models' and 'data' (for pagination)
+    const models = data.list || data.models || data.data || [];
     
     console.log(`[Fal API] Successfully fetched ${models.length} models`);
-    console.log(`[Fal API] Response format used:`, data.models ? 'models' : data.list ? 'list' : data.data ? 'data' : 'empty');
+    console.log(`[Fal API] Response format used:`, data.list ? 'list (primary)' : data.models ? 'models' : data.data ? 'data' : 'empty');
     if (models.length > 0) {
       console.log(`[Fal API] Sample model structure:`, JSON.stringify(models[0], null, 2));
     }
