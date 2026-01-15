@@ -1,9 +1,9 @@
-const { i18n } = require('./next-i18next.config');
+// Note: i18n config removed - Next.js 15 App Router doesn't support Pages Router i18n
+// Internationalization is now handled via middleware and app directory structure
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  i18n,
   images: {
     remotePatterns: [
       {

@@ -12,13 +12,16 @@ export const metadata: Metadata = {
   description: 'Web interface for FAL.AI image and video generation models',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-  params: { locale = 'en' } = {},
+  params,
 }: {
   children: React.ReactNode,
-  params?: { locale?: string }
+  params?: Promise<{ locale?: string }>
 }) {
+  // Next.js 15: params is now a Promise
+  const { locale = 'en' } = params ? await params : {};
+  
   return (
     <html lang={locale}>
       <body className={fontClassName}>
