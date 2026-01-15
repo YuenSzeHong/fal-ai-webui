@@ -1,8 +1,5 @@
 import { route } from "@fal-ai/server-proxy/nextjs";
 
-// Force dynamic rendering - don't prerender during build
-export const dynamic = 'force-dynamic';
-
 // Check if FAL_KEY is set
 if (!process.env.FAL_KEY) {
   console.error('[Server] FAL_KEY environment variable is not set. Please add it to .env.local');
