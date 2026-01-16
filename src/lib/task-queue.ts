@@ -5,7 +5,7 @@ import { generateImage, generateVideo } from './fal-client';
 export type TaskStatus = 'pending' | 'in_queue' | 'in_progress' | 'completed' | 'failed';
 
 // タスクの種類
-export type TaskType = 'image' | 'video';
+export type TaskType = 'image' | 'video' | 'image-to-video' | 'image-to-image' | 'video-to-video' | 'upscaling' | 'image-to-3d' | 'audio' | 'image-utilities';
 
 // タスク更新リスナー型
 export type TaskUpdateListener = (tasks: Task[]) => void;

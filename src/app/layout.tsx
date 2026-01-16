@@ -1,33 +1,39 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
 import { NotificationProvider } from '@/components/common/NotificationContext'
 import { TranslationsProvider } from '@/components/TranslationsProvider'
+import { QueryProvider } from '@/lib/query-client'
 import type { Metadata } from 'next'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system font stack as fallback for environments without internet access
+const fontClassName = 'font-sans'
 
 export const metadata: Metadata = {
   title: 'FAL.AI Web UI',
   description: 'Web interface for FAL.AI image and video generation models',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-  params: { locale = 'en' } = {},
+  params,
 }: {
   children: React.ReactNode,
-  params?: { locale?: string }
+  params?: Promise<{ locale?: string }>
 }) {
+  // Next.js 15: params is now a Promise
+  const { locale = 'en' } = params ? await params : {};
+  
   return (
     <html lang={locale}>
-      <body className={inter.className}>
-        <NotificationProvider>
-          <TranslationsProvider locale={locale}>
-            <main className="min-h-screen">
-              {children}
-            </main>
-          </TranslationsProvider>
-        </NotificationProvider>
+      <body className={fontClassName}>
+        <QueryProvider>
+          <NotificationProvider>
+            <TranslationsProvider locale={locale}>
+              <main className="min-h-screen">
+                {children}
+              </main>
+            </TranslationsProvider>
+          </NotificationProvider>
+        </QueryProvider>
       </body>
     </html>
   )

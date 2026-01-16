@@ -17,6 +17,10 @@
   },
   "buttons": {
     "useForGeneration": "Use for Generation",
+    "sendToUpscale": "Send to Upscale",
+    "sendToI2I": "Send to I2I",
+    "sendToI2V": "Send to I2V",
+    "sendToV2V": "Send to V2V",
     "copy": "Copy",
     "close": "Close",
     "downloadImage": "Download Image",
@@ -97,5 +101,27 @@
   "common": {
     "enabled": "Enabled",
     "disabled": "Disabled"
+  },
+  "categories": {
+    "t2i": "T2I",
+    "t2v": "T2V",
+    "i2v": "I2V",
+    "i2i": "I2I",
+    "v2v": "V2V",
+    "upscale": "Upscale",
+    "i23d": "I23D",
+    "audio": "Audio",
+    "utils": "Utils",
+    "comingSoon": "Coming Soon",
+    "t2iDesc": "Generate images from text descriptions",
+    "t2vDesc": "Generate videos from text descriptions",
+    "i2vDesc": "Generate videos from images",
+    "i2iDesc": "Transform and edit images",
+    "v2vDesc": "Transform videos",
+    "upscaleDesc": "Upscale images and videos",
+    "i23dDesc": "Generate 3D models from images",
+    "audioDesc": "Generate audio and music",
+    "utilsDesc": "Image utilities: background removal, depth, segmentation",
+    "modelsAvailable": "{{count}} models available"
   }
 } 

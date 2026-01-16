@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged for linting and formatting
+npm run pre-commit
+
+# Run TypeScript type checking
+echo "🔍 Running TypeScript type check..."
+npm run type-check
+
+# Run build check (but skip on certain conditions)
+if [ -z "$SKIP_BUILD_CHECK" ]; then
+  echo "🏗️  Running build check..."
+  npm run build
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Build failed! Please fix the build errors before committing."
+    exit 1
+  fi
+  
+  echo "✅ Build check passed!"
+else
+  echo "⏭️  Skipping build check (SKIP_BUILD_CHECK is set)"
+fi
+
+echo "✅ All pre-commit checks passed!"

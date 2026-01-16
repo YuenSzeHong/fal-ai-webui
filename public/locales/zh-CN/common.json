@@ -1,0 +1,127 @@
+{
+  "navigation": {
+    "newGeneration": "新增生成",
+    "history": "历史记录"
+  },
+  "generationType": {
+    "image": "图像生成",
+    "video": "视频生成"
+  },
+  "taskQueue": {
+    "title": "任务队列",
+    "clearCompleted": "清除已完成任务",
+    "noActiveTasks": "目前没有执行中的任务",
+    "cancel": "取消",
+    "delete": "删除",
+    "clickToViewResult": "点击查看结果"
+  },
+  "buttons": {
+    "useForGeneration": "用于生成",
+    "sendToUpscale": "发送到放大",
+    "sendToI2I": "发送到图像编辑",
+    "sendToI2V": "发送到视频生成",
+    "sendToV2V": "发送到视频转换",
+    "copy": "复制",
+    "close": "关闭",
+    "downloadImage": "下载图片",
+    "downloadVideo": "下载视频",
+    "confirm": "删除",
+    "cancel": "取消",
+    "delete": "删除",
+    "copyPrompt": "复制提示词",
+    "deleteAll": "全部删除"
+  },
+  "generation": {
+    "result": {
+      "imageTitle": "生成的图像",
+      "videoTitle": "生成的视频",
+      "seed": "种子值",
+      "random": "随机",
+      "resolution": "分辨率",
+      "prompt": "提示词",
+      "noPromptData": "无提示词数据",
+      "willAppearHere": "生成的内容将显示在此处"
+    }
+  },
+  "form": {
+    "prompt": "提示词",
+    "enterPrompt": "输入您想要生成内容的详细描述",
+    "model": "模型",
+    "seed": "种子值（选填）",
+    "randomSeed": "若留空将使用随机种子值",
+    "generate": "生成",
+    "advancedSettings": "高级设置",
+    "numberOfImages": "图片数量",
+    "outputFormat": "输出格式",
+    "aspectRatio": "长宽比",
+    "resolution": "分辨率",
+    "inferenceSteps": "推理步骤",
+    "safetyChecker": "启用安全检查器",
+    "safetyTolerance": "安全容许度",
+    "promptExpansion": "启用提示词扩展",
+    "rawMode": "原始模式",
+    "generating": "生成中..."
+  },
+  "status": {
+    "pending": "等待中",
+    "inQueue": "队列中",
+    "inProgress": "处理中",
+    "completed": "已完成",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "history": {
+    "noHistory": "没有历史记录",
+    "clearHistory": "清除历史",
+    "clearSelected": "清除选取项目",
+    "selectAll": "全选",
+    "deselectAll": "取消全选",
+    "imageGeneration": "图像生成",
+    "videoGeneration": "视频生成",
+    "viewDetails": "查看详情",
+    "details": "详情",
+    "generationDate": "生成日期",
+    "allItems": "全部项目",
+    "gridView": "网格",
+    "listView": "列表",
+    "deleteConfirmTitle": "确认删除",
+    "deleteConfirmMessage": " - 您确定要删除此项目吗？",
+    "clearAllConfirmTitle": "确认全部清除",
+    "clearAllImageConfirmMessage": "您确定要删除所有图像历史记录吗？此操作无法撤销。",
+    "clearAllVideoConfirmMessage": "您确定要删除所有视频历史记录吗？此操作无法撤销。",
+    "clearAllConfirmMessage": "您确定要删除所有历史记录吗？此操作无法撤销。"
+  },
+  "language": {
+    "switchTo": "切换至英文"
+  },
+  "notifications": {
+    "promptCopied": "提示词已复制到剪贴板",
+    "promptCopyFailed": "提示词复制失败"
+  },
+  "common": {
+    "enabled": "已启用",
+    "disabled": "已停用"
+  },
+  "categories": {
+    "t2i": "文生图",
+    "t2v": "文生视频",
+    "i2v": "图生视频",
+    "i2i": "图像编辑",
+    "v2v": "视频转换",
+    "upscale": "放大",
+    "i23d": "图生3D",
+    "audio": "音频",
+    "utils": "工具",
+    "comingSoon": "即将推出",
+    "t2iDesc": "从文字描述生成图像",
+    "t2vDesc": "从文字描述生成视频",
+    "i2vDesc": "从图像生成视频",
+    "i2iDesc": "转换和编辑图像",
+    "v2vDesc": "转换视频",
+    "upscaleDesc": "放大图像和视频",
+    "i23dDesc": "从图像生成3D模型",
+    "audioDesc": "生成音频和音乐",
+    "utilsDesc": "图像工具：背景移除、深度图、分割",
+    "modelsAvailable": "{{count}}个模型可用"
+  }
+}

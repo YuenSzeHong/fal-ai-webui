@@ -5,17 +5,22 @@ fal.config({
   proxyUrl: '/api/fal/proxy',
 });
 
-// Available model endpoints
-export const MODELS = {
-  textToImage: {
-    FLUX1_1_PRO_ultra: 'fal-ai/flux-pro/v1.1-ultra',
-    FLUX1_1_PRO: 'fal-ai/flux-pro/v1.1',
+// Model information interface
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  supportsSafetyFilter?: boolean; // Indicates if model supports disabling safety filter
+  safetyFilterNote?: string; // Additional note about safety filter behavior
+}
 
-  },
-  textToVideo: {
-    WAN_T2V: 'fal-ai/wan-t2v',
-    WAN_T2V_1_3B: 'fal-ai/wan/v2.1/1.3b/text-to-video',
-  },
+// Default models (fallback if API fetch fails)
+export const DEFAULT_MODELS = {
+  textToImage: 'fal-ai/flux-pro/v1.1-ultra',
+  textToVideo: 'fal-ai/minimax/video-01',
+  imageToVideo: 'fal-ai/minimax/video-01/image-to-video',
+  upscaling: 'fal-ai/clarity-upscaler',
+  imageTo3D: 'fal-ai/era-3d',
 };
 
 // Types for image format and aspect ratio options
@@ -50,6 +55,36 @@ export interface VideoGenerationResult {
   prompt?: string;
 }
 
+export interface UpscalingResult {
+  image: {
+    url: string;
+    width: number;
+    height: number;
+    content_type?: string;
+  };
+}
+
+export interface Image3DResult {
+  model: {
+    url: string;
+    content_type?: string;
+    file_name?: string;
+  };
+  preview?: {
+    url: string;
+  };
+}
+
+export interface AudioResult {
+  audio: {
+    url: string;
+    content_type?: string;
+    file_name?: string;
+    file_size?: number;
+  };
+  duration?: number;
+}
+
 // Interface for fal.ai API response
 interface FalApiResponse<T> {
   data: T;
@@ -59,7 +94,7 @@ interface FalApiResponse<T> {
 // Function to generate images from text
 export async function generateImage(
   prompt: string,
-  modelId: string = MODELS.textToImage.FLUX1_1_PRO_ultra,
+  modelId: string = DEFAULT_MODELS.textToImage,
   seed?: number,
   options: {
     num_images?: number;
@@ -124,10 +159,10 @@ export async function generateImage(
   }
 }
 
-// Function to generate videos from text and image
+// Function to generate videos from text
 export async function generateVideo(
   prompt: string,
-  modelId: string = MODELS.textToVideo.WAN_T2V,
+  modelId: string = DEFAULT_MODELS.textToVideo,
   seed?: number,
   options: {
     resolution?: VideoResolution;
@@ -162,5 +197,231 @@ export async function generateVideo(
   } catch (error) {
     console.error('Error generating video:', error);
     throw error;
+  }
+}
+
+// Function to generate video from image
+export async function generateImageToVideo(
+  imageUrl: string,
+  prompt: string,
+  modelId: string = DEFAULT_MODELS.imageToVideo,
+  options: {
+    seed?: number;
+    resolution?: VideoResolution;
+    aspect_ratio?: VideoAspectRatio;
+    duration?: number;
+  } = {}
+): Promise<VideoGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        prompt,
+        seed: options.seed,
+        resolution: options.resolution,
+        aspect_ratio: options.aspect_ratio,
+        duration: options.duration,
+      },
+    });
+    
+    const result = (response as FalApiResponse<VideoGenerationResult>).data;
+    
+    if (!result || !result.video || !result.video.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating video from image:', error);
+    throw error;
+  }
+}
+
+// Function to upscale images
+export async function upscaleImage(
+  imageUrl: string,
+  modelId: string = DEFAULT_MODELS.upscaling,
+  options: {
+    scale?: number;
+    creativity?: number;
+    detail?: number;
+  } = {}
+): Promise<UpscalingResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        scale: options.scale ?? 2,
+        creativity: options.creativity,
+        detail: options.detail,
+      },
+    });
+    
+    const result = (response as FalApiResponse<UpscalingResult>).data;
+    
+    if (!result || !result.image || !result.image.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error upscaling image:', error);
+    throw error;
+  }
+}
+
+// Function to generate 3D model from image
+export async function generateImage3D(
+  imageUrl: string,
+  modelId: string = DEFAULT_MODELS.imageTo3D,
+  options: Record<string, any> = {}
+): Promise<Image3DResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<Image3DResult>).data;
+    
+    if (!result || !result.model || !result.model.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating 3D model:', error);
+    throw error;
+  }
+}
+
+// Function to generate image from image (edit, transform, etc.)
+export async function generateImageToImage(
+  imageUrl: string,
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<ImageGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<ImageGenerationResult>).data;
+    
+    if (!result || !result.images || result.images.length === 0) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating image from image:', error);
+    throw error;
+  }
+}
+
+// Function to transform video
+export async function generateVideoToVideo(
+  videoUrl: string,
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<VideoGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        video_url: videoUrl,
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<VideoGenerationResult>).data;
+    
+    if (!result || !result.video || !result.video.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error transforming video:', error);
+    throw error;
+  }
+}
+
+// Function to generate audio
+export async function generateAudio(
+  prompt: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<AudioResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        prompt,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<AudioResult>).data;
+    
+    if (!result || !result.audio || !result.audio.url) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating audio:', error);
+    throw error;
+  }
+}
+
+// Function to process image utilities (bg removal, depth, etc.)
+export async function processImageUtility(
+  imageUrl: string,
+  modelId: string,
+  options: Record<string, any> = {}
+): Promise<ImageGenerationResult> {
+  try {
+    const response = await fal.subscribe(modelId, {
+      input: {
+        image_url: imageUrl,
+        ...options,
+      },
+    });
+    
+    const result = (response as FalApiResponse<ImageGenerationResult>).data;
+    
+    if (!result || !result.images || result.images.length === 0) {
+      throw new Error('Unexpected API response format');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error processing image utility:', error);
+    throw error;
+  }
+}
+
+// Function to fetch available models from API
+export async function fetchModels(category: string): Promise<ModelInfo[]> {
+  try {
+    const response = await fetch(`/api/models/${category}`);
+    if (!response.ok) {
+      const errorMsg = `Failed to fetch models: ${response.statusText}`;
+      console.warn(`[Client] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+    const data = await response.json();
+    return data.models || [];
+  } catch (error) {
+    console.warn(`[Client] Error fetching ${category} models:`, error);
+    return [];
   }
 } 

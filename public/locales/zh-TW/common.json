@@ -1,0 +1,127 @@
+{
+  "navigation": {
+    "newGeneration": "新增生成",
+    "history": "歷史記錄"
+  },
+  "generationType": {
+    "image": "圖像生成",
+    "video": "影片生成"
+  },
+  "taskQueue": {
+    "title": "任務佇列",
+    "clearCompleted": "清除已完成任務",
+    "noActiveTasks": "目前沒有執行中的任務",
+    "cancel": "取消",
+    "delete": "刪除",
+    "clickToViewResult": "點擊查看結果"
+  },
+  "buttons": {
+    "useForGeneration": "用於生成",
+    "sendToUpscale": "發送到放大",
+    "sendToI2I": "發送到圖像編輯",
+    "sendToI2V": "發送到影片生成",
+    "sendToV2V": "發送到影片轉換",
+    "copy": "複製",
+    "close": "關閉",
+    "downloadImage": "下載圖片",
+    "downloadVideo": "下載影片",
+    "confirm": "刪除",
+    "cancel": "取消",
+    "delete": "刪除",
+    "copyPrompt": "複製提示詞",
+    "deleteAll": "全部刪除"
+  },
+  "generation": {
+    "result": {
+      "imageTitle": "生成的圖像",
+      "videoTitle": "生成的影片",
+      "seed": "種子值",
+      "random": "隨機",
+      "resolution": "解析度",
+      "prompt": "提示詞",
+      "noPromptData": "無提示詞數據",
+      "willAppearHere": "生成的內容將顯示在此處"
+    }
+  },
+  "form": {
+    "prompt": "提示詞",
+    "enterPrompt": "輸入您想要生成內容的詳細描述",
+    "model": "模型",
+    "seed": "種子值（選填）",
+    "randomSeed": "若留空將使用隨機種子值",
+    "generate": "生成",
+    "advancedSettings": "進階設定",
+    "numberOfImages": "圖片數量",
+    "outputFormat": "輸出格式",
+    "aspectRatio": "長寬比",
+    "resolution": "解析度",
+    "inferenceSteps": "推理步驟",
+    "safetyChecker": "啟用安全檢查器",
+    "safetyTolerance": "安全容許度",
+    "promptExpansion": "啟用提示詞擴展",
+    "rawMode": "原始模式",
+    "generating": "生成中..."
+  },
+  "status": {
+    "pending": "等待中",
+    "inQueue": "佇列中",
+    "inProgress": "處理中",
+    "completed": "已完成",
+    "failed": "失敗",
+    "cancelled": "已取消"
+  },
+  "history": {
+    "noHistory": "沒有歷史記錄",
+    "clearHistory": "清除歷史",
+    "clearSelected": "清除選取項目",
+    "selectAll": "全選",
+    "deselectAll": "取消全選",
+    "imageGeneration": "圖像生成",
+    "videoGeneration": "影片生成",
+    "viewDetails": "查看詳情",
+    "details": "詳情",
+    "generationDate": "生成日期",
+    "allItems": "全部項目",
+    "gridView": "網格",
+    "listView": "列表",
+    "deleteConfirmTitle": "確認刪除",
+    "deleteConfirmMessage": " - 您確定要刪除此項目嗎？",
+    "clearAllConfirmTitle": "確認全部清除",
+    "clearAllImageConfirmMessage": "您確定要刪除所有圖像歷史記錄嗎？此操作無法復原。",
+    "clearAllVideoConfirmMessage": "您確定要刪除所有影片歷史記錄嗎？此操作無法復原。",
+    "clearAllConfirmMessage": "您確定要刪除所有歷史記錄嗎？此操作無法復原。"
+  },
+  "language": {
+    "switchTo": "切換至英文"
+  },
+  "notifications": {
+    "promptCopied": "提示詞已複製到剪貼簿",
+    "promptCopyFailed": "提示詞複製失敗"
+  },
+  "common": {
+    "enabled": "已啟用",
+    "disabled": "已停用"
+  },
+  "categories": {
+    "t2i": "文生圖",
+    "t2v": "文生影片",
+    "i2v": "圖生影片",
+    "i2i": "圖像編輯",
+    "v2v": "影片轉換",
+    "upscale": "放大",
+    "i23d": "圖生3D",
+    "audio": "音訊",
+    "utils": "工具",
+    "comingSoon": "即將推出",
+    "t2iDesc": "從文字描述生成圖像",
+    "t2vDesc": "從文字描述生成影片",
+    "i2vDesc": "從圖像生成影片",
+    "i2iDesc": "轉換和編輯圖像",
+    "v2vDesc": "轉換影片",
+    "upscaleDesc": "放大圖像和影片",
+    "i23dDesc": "從圖像生成3D模型",
+    "audioDesc": "生成音訊和音樂",
+    "utilsDesc": "圖像工具：背景移除、深度圖、分割",
+    "modelsAvailable": "{{count}}個模型可用"
+  }
+}

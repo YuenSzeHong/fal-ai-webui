@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  MODELS, 
+  DEFAULT_MODELS,
   ImageGenerationResult, 
   OutputFormat, 
   ImageAspectRatio, 
@@ -11,6 +11,7 @@ import {
 import { taskQueue, Task } from '@/lib/task-queue';
 import { addImageToHistory } from '@/lib/history-store';
 import { useTranslations } from '@/lib/useTranslations';
+import { useModels } from '@/hooks/useModels';
 
 interface TextToImageFormProps {
   onResultChange?: (result: ImageGenerationResult | null) => void;
@@ -46,7 +47,7 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const { t } = useTranslations();
   const [prompt, setPrompt] = useState(initialState?.prompt || '');
   const [seed, setSeed] = useState<number | undefined>(initialState?.seed);
-  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || MODELS.textToImage.FLUX1_1_PRO_ultra);
+  const [selectedModel, setSelectedModel] = useState(initialState?.selectedModel || DEFAULT_MODELS.textToImage);
   const [numImages, setNumImages] = useState(initialState?.numImages || 1);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>(initialState?.outputFormat || 'jpeg');
   const [aspectRatio, setAspectRatio] = useState<ImageAspectRatio>(initialState?.aspectRatio || '3:4');
@@ -57,6 +58,13 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImageGenerationResult | null>(null);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
+  
+  // Use TanStack Query hook for model loading
+  const { data: models = [], isLoading: modelsLoading, error: modelsError } = useModels('text-to-image');
+  
+  // Get current model info
+  const currentModel = models.find(m => m.id === selectedModel);
+  const safetyFilterDisabled = currentModel && currentModel.supportsSafetyFilter === false;
 
   // 状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
@@ -99,9 +107,7 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
   // モデルによって利用可能なサイズが異なるため、モデルが変更されたときにサイズを更新
   useEffect(() => {
     // 現在はモデル固有の条件分岐は不要ですが、将来的に必要になった場合のためのプレースホルダー
-    if (selectedModel === MODELS.textToImage.FLUX1_1_PRO_ultra) {
-      // モデル固有の設定があれば、ここで行います
-    }
+    // モデル固有の設定があれば、ここで行います
   }, [selectedModel]);
   
   // Send result to parent component when it changes
@@ -220,10 +226,30 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
           className="input bg-white dark:bg-gray-700 dark:text-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
+          disabled={modelsLoading}
         >
-          <option value={MODELS.textToImage.FLUX1_1_PRO_ultra}>FLUX1.1 [pro] ultra</option>
-          <option value={MODELS.textToImage.FLUX1_1_PRO}>FLUX1.1 [pro]</option>
+          {modelsLoading ? (
+            <option>Loading models...</option>
+          ) : modelsError ? (
+            <option>Error loading models</option>
+          ) : (
+            models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))
+          )}
         </select>
+        {modelsError && (
+          <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+            Using default model. Failed to load model list.
+          </p>
+        )}
+        {currentModel?.safetyFilterNote && (
+          <p className="mt-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded border border-blue-200 dark:border-blue-800">
+            ℹ️ {currentModel.safetyFilterNote}
+          </p>
+        )}
       </div>
       
       <div className="mb-4">
@@ -323,9 +349,11 @@ const TextToImageForm: React.FC<TextToImageFormProps> = ({
             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             checked={enableSafetyChecker}
             onChange={(e) => setEnableSafetyChecker(e.target.checked)}
+            disabled={safetyFilterDisabled}
           />
-          <label htmlFor="enableSafetyChecker" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor="enableSafetyChecker" className={`ml-2 block text-sm ${safetyFilterDisabled ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>
             {t('form.safetyChecker')}
+            {safetyFilterDisabled && ' (Not available for this model)'}
           </label>
         </div>
         
