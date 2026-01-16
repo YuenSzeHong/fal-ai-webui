@@ -251,13 +251,22 @@ export function filterModelsByCategory(models: FalModelInfo[], category: string)
  */
 export function convertToModelInfo(falModel: FalModelInfo) {
   const modelId = falModel.endpoint_id || falModel.id || '';
+  
+  // NEW: Use display_name from metadata if available, otherwise format the ID
+  // The display_name from API contains the full model name with variants/sub-names
   const modelName = falModel.metadata?.display_name || falModel.name || formatModelName(modelId);
   const modelDescription = falModel.metadata?.description || falModel.description || '';
+  
+  // Check if model supports video (for video upscaling detection)
+  const isVideoModel = modelId.toLowerCase().includes('video') || 
+                       modelDescription.toLowerCase().includes('video') ||
+                       falModel.metadata?.category?.toLowerCase().includes('video');
   
   return {
     id: modelId,
     name: modelName,
     description: modelDescription,
+    isVideoModel, // NEW: Flag for video models
     // Safety filter support - assume FLUX models support it, others don't
     supportsSafetyFilter: modelId.toLowerCase().includes('flux'),
     safetyFilterNote: modelId.toLowerCase().includes('flux') 
@@ -268,12 +277,14 @@ export function convertToModelInfo(falModel: FalModelInfo) {
 
 /**
  * Format model ID into readable name
+ * Preserves sub-names and variants in the model ID
  */
 function formatModelName(modelId: string): string {
   // Remove fal-ai/ prefix
   const name = modelId.replace(/^fal-ai\//, '');
   
   // Split by / and capitalize each part
+  // This preserves the full path structure including sub-names/variants
   return name
     .split('/')
     .map(part => part
@@ -281,5 +292,5 @@ function formatModelName(modelId: string): string {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
     )
-    .join(' - ');
+    .join(' / '); // Use / separator to show hierarchy
 }

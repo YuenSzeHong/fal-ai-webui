@@ -17,6 +17,10 @@
   },
   "buttons": {
     "useForGeneration": "生成に使用",
+    "sendToUpscale": "アップスケールに送る",
+    "sendToI2I": "画像編集に送る",
+    "sendToI2V": "動画生成に送る",
+    "sendToV2V": "動画変換に送る",
     "copy": "コピー",
     "close": "閉じる",
     "downloadImage": "画像をダウンロード",

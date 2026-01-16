@@ -5,6 +5,7 @@ export interface ModelInfo {
   id: string;
   name: string;
   description: string;
+  isVideoModel?: boolean; // NEW: Flag indicating if model supports video
   supportsSafetyFilter?: boolean; // Indicates if model supports disabling safety filter
   safetyFilterNote?: string; // Additional note about safety filter behavior
 }

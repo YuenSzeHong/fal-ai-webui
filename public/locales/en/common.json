@@ -17,6 +17,10 @@
   },
   "buttons": {
     "useForGeneration": "Use for Generation",
+    "sendToUpscale": "Send to Upscale",
+    "sendToI2I": "Send to I2I",
+    "sendToI2V": "Send to I2V",
+    "sendToV2V": "Send to V2V",
     "copy": "Copy",
     "close": "Close",
     "downloadImage": "Download Image",

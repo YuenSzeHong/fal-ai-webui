@@ -17,6 +17,10 @@
   },
   "buttons": {
     "useForGeneration": "用於生成",
+    "sendToUpscale": "發送到放大",
+    "sendToI2I": "發送到圖像編輯",
+    "sendToI2V": "發送到影片生成",
+    "sendToV2V": "發送到影片轉換",
     "copy": "複製",
     "close": "關閉",
     "downloadImage": "下載圖片",

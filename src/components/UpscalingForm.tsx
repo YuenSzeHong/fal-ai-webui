@@ -14,13 +14,14 @@ import { useTranslations } from '@/lib/useTranslations';
 
 interface UpscalingFormProps {
   onResultChange?: (result: UpscalingResult | null) => void;
+  initialImageUrl?: string; // NEW: Initial image URL passed from another form
 }
 
-const UpscalingForm: React.FC<UpscalingFormProps> = ({ onResultChange }) => {
+const UpscalingForm: React.FC<UpscalingFormProps> = ({ onResultChange, initialImageUrl }) => {
   const { t } = useTranslations();
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState(initialImageUrl || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialImageUrl || null);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODELS.upscaling);
   const [scale, setScale] = useState(2);
   const [creativity, setCreativity] = useState(0.35);

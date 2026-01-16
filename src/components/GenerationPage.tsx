@@ -31,6 +31,7 @@ import HistoryPanel from './HistoryPanel';
 import TaskQueuePanel from './TaskQueuePanel';
 import CopyToClipboardButton from './common/CopyToClipboardButton';
 import UseForGenerationButton from './common/UseForGenerationButton';
+import SendToFormButtons from './common/SendToFormButtons';
 import { useTranslations } from '@/lib/useTranslations';
 import ImageZoomModal from './common/ImageZoomModal';
 import { useModelCounts } from '@/hooks/useModels';
@@ -108,6 +109,10 @@ const GenerationPage: React.FC = () => {
     enableSafetyChecker: false,
     enablePromptExpansion: false
   });
+  
+  // NEW: State for passing images/videos between forms
+  const [passedImageUrl, setPassedImageUrl] = useState<string>('');
+  const [passedVideoUrl, setPassedVideoUrl] = useState<string>('');
   
   // 画像拡大モーダルの状態
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
@@ -223,6 +228,14 @@ const GenerationPage: React.FC = () => {
               </div>
             </div>
             
+            {/* NEW: Send to form buttons for images */}
+            <SendToFormButtons
+              imageUrl={imageResult.images[selectedImageIndex].url}
+              onSendToUpscale={handleSendToUpscale}
+              onSendToI2I={handleSendToI2I}
+              onSendToI2V={handleSendToI2V}
+            />
+            
             <div className="mt-4">
               <a
                 href={imageResult.images[selectedImageIndex].url}
@@ -280,6 +293,12 @@ const GenerationPage: React.FC = () => {
               </div>
             </div>
             
+            {/* NEW: Send to form buttons for videos */}
+            <SendToFormButtons
+              videoUrl={videoResult.video.url}
+              onSendToV2V={handleSendToV2V}
+            />
+            
             <div className="mt-4">
               <a
                 href={videoResult.video.url}
@@ -331,6 +350,35 @@ const GenerationPage: React.FC = () => {
     
     // アクティブパネルをフォームに切り替える
     setActivePanel('form');
+  };
+
+  // NEW: Handler functions for sending content between forms
+  const handleSendToUpscale = (imageUrl: string) => {
+    setPassedImageUrl(imageUrl);
+    setGenerationType('upscaling');
+    setActivePanel('form');
+    setFormKey(prevKey => prevKey + 1);
+  };
+
+  const handleSendToI2I = (imageUrl: string) => {
+    setPassedImageUrl(imageUrl);
+    setGenerationType('image-to-image');
+    setActivePanel('form');
+    setFormKey(prevKey => prevKey + 1);
+  };
+
+  const handleSendToI2V = (imageUrl: string) => {
+    setPassedImageUrl(imageUrl);
+    setGenerationType('image-to-video');
+    setActivePanel('form');
+    setFormKey(prevKey => prevKey + 1);
+  };
+
+  const handleSendToV2V = (videoUrl: string) => {
+    setPassedVideoUrl(videoUrl);
+    setGenerationType('video-to-video');
+    setActivePanel('form');
+    setFormKey(prevKey => prevKey + 1);
   };
 
   return (
@@ -586,21 +634,25 @@ const GenerationPage: React.FC = () => {
                   />
                 ) : generationType === 'image-to-video' ? (
                   <ImageToVideoForm 
+                    initialImageUrl={passedImageUrl}
                     onResultChange={setVideoResult}
                     key={formKey}
                   />
                 ) : generationType === 'image-to-image' ? (
                   <ImageToImageForm 
+                    initialImageUrl={passedImageUrl}
                     onResultChange={setImageResult}
                     key={formKey}
                   />
                 ) : generationType === 'video-to-video' ? (
                   <VideoToVideoForm 
+                    initialVideoUrl={passedVideoUrl}
                     onResultChange={setVideoResult}
                     key={formKey}
                   />
                 ) : generationType === 'upscaling' ? (
                   <UpscalingForm 
+                    initialImageUrl={passedImageUrl}
                     onResultChange={(result) => {
                       if (result) {
                         // Convert UpscalingResult to ImageGenerationResult format

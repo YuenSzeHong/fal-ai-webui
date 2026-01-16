@@ -17,6 +17,10 @@
   },
   "buttons": {
     "useForGeneration": "用于生成",
+    "sendToUpscale": "发送到放大",
+    "sendToI2I": "发送到图像编辑",
+    "sendToI2V": "发送到视频生成",
+    "sendToV2V": "发送到视频转换",
     "copy": "复制",
     "close": "关闭",
     "downloadImage": "下载图片",
