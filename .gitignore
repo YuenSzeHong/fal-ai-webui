@@ -3,6 +3,12 @@
 /.pnp
 .pnp.js
 
+# Lock files (should be in version control for consistency)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
 # Testing
 /coverage
 
