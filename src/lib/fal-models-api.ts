@@ -1,10 +1,11 @@
 /**
  * Fal.ai Models Discovery API Client
- * Fetches available models from https://rest.alpha.fal.ai/models
- * Based on https://docs.fal.ai/platform-apis/v1/models
+ * Fetches available models from https://api.fal.ai/v1/models
+ * Based on latest docs at https://docs.fal.ai/platform-apis/v1/models
+ * Updated: 2026-01-16 - Synced with Context7 documentation
  */
 
-const FAL_API_BASE = 'https://rest.alpha.fal.ai';
+const FAL_API_BASE = 'https://api.fal.ai/v1';
 
 export interface FalModelMetadata {
   display_name?: string;
@@ -28,12 +29,10 @@ export interface FalModelInfo {
 }
 
 export interface FalModelsListResponse {
-  list?: FalModelInfo[]; // PRIMARY format per official docs at https://docs.fal.ai/platform-apis/v1/models
-  models?: FalModelInfo[]; // Alternative format
-  data?: FalModelInfo[]; // Alternative format with pagination
-  next_page_cursor?: string | null;
-  next_cursor?: string | null;
-  has_more?: boolean;
+  models?: FalModelInfo[]; // PRIMARY format per official docs at https://docs.fal.ai/platform-apis/v1/models
+  data?: FalModelInfo[]; // Alternative wrapper format
+  next_cursor?: string | null; // Pagination cursor
+  has_more?: boolean; // Has more pages
   total?: number;
   limit?: number;
   offset?: number;
@@ -103,24 +102,25 @@ export async function fetchFalModels(options?: {
 
       const data: FalModelsListResponse = await response.json();
       
-      // Handle different response formats per official Context7 docs
-      // PRIMARY format is 'list' array per official docs at https://docs.fal.ai/platform-apis/v1/models
-      // Alternative formats: 'models' and 'data' (for pagination)
-      const models = data.list || data.models || data.data || [];
+      // Handle different response formats per latest Context7 docs (2026-01-16)
+      // PRIMARY format is 'models' array per official docs at https://docs.fal.ai/platform-apis/v1/models
+      // Alternative format: 'data' array (wrapper format)
+      // Response structure: { "models": [...], "next_cursor": "...", "has_more": true }
+      const models = data.models || data.data || [];
       
       console.log(`[Fal API] Page ${pageNumber}: fetched ${models.length} models`);
-      console.log(`[Fal API] Response format used:`, data.list ? 'list (primary)' : data.models ? 'models' : data.data ? 'data' : 'empty');
+      console.log(`[Fal API] Response format used:`, data.models ? 'models (primary)' : data.data ? 'data (wrapper)' : 'empty');
       if (pageNumber === 1 && models.length > 0) {
         console.log(`[Fal API] Sample model structure:`, JSON.stringify(models[0], null, 2));
       }
       
       allModels.push(...models);
       
-      // Check if there are more pages
-      cursor = data.next_page_cursor || data.next_cursor || null;
+      // Check if there are more pages using next_cursor and has_more
+      cursor = data.next_cursor || null;
       const hasMore = data.has_more ?? (cursor !== null);
       
-      console.log(`[Fal API] Pagination: has_more=${hasMore}, cursor=${cursor ? 'present' : 'null'}`);
+      console.log(`[Fal API] Pagination: has_more=${hasMore}, next_cursor=${cursor ? 'present' : 'null'}`);
       
       // If not fetching all pages, break after first page
       if (!options?.fetchAll) {
